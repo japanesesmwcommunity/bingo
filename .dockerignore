@@ -1,0 +1,10 @@
+.git
+.agents
+.codex
+**/tmp
+**/node_modules
+backend/static
+.env
+.env.*
+**/.bingo-backups
+**/.bingo-pending-*

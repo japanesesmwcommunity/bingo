@@ -1,0 +1,30 @@
+{
+  "name": "@smw-bingo/frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@12.4.1",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "test": "node --import tsx --test tests/*.test.mjs",
+    "test:browser": "node --import tsx --test tests/browser.mjs tests/admin-browser.mjs",
+    "format": "prettier --write src index.html style.css tests vite.config.ts tsconfig.json package.json",
+    "format:check": "prettier --check src index.html style.css tests vite.config.ts tsconfig.json package.json"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "prettier": "3.9.8",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.0"
+  }
+}

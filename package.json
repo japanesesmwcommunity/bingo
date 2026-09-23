@@ -1,0 +1,15 @@
+{
+  "name": "smw-bingo",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@12.4.1",
+  "scripts": {
+    "dev": "pnpm --dir frontend dev",
+    "typecheck": "pnpm --dir frontend typecheck",
+    "build": "pnpm --dir frontend build",
+    "test": "pnpm --dir frontend test",
+    "test:browser": "pnpm --dir frontend test:browser",
+    "format": "pnpm --dir frontend format",
+    "format:check": "pnpm --dir frontend format:check"
+  }
+}

@@ -1,0 +1,670 @@
+{
+  "goals": [
+    {
+      "name": "6つの水中ステージをクリアする",
+      "world": "",
+      "level": "",
+      "timeMin": 60,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:clear"
+      ],
+      "routeAreas": [
+        "ヨースターとう",
+        "ドーナツへいや",
+        "スターロード",
+        "まよいのもり",
+        "チョコレーとう",
+        "チーズブリッジ",
+        "vanilla:common",
+        "vanilla:cheese",
+        "vanilla:plateau",
+        "plateau:butter"
+      ],
+      "disabledReason": "水中ステージの対象一覧と到達経路を確定する。"
+    },
+    {
+      "name": "通常ゴール",
+      "world": "チョコレーとう",
+      "level": "コース3",
+      "timeMin": 25,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:choco",
+        "type:clear"
+      ]
+    },
+    {
+      "name": "ヨースター2・森1・森3で、それぞれ同一入場中に赤い木の実10個によって産まれたキノコを取る",
+      "world": "",
+      "level": "",
+      "timeMin": 25,
+      "exec": 2,
+      "risk": 1,
+      "tags": [
+        "area:multi",
+        "type:yoshi"
+      ]
+    },
+    {
+      "name": "すべてのゴールをクリアする",
+      "world": "まよいのもり",
+      "level": "",
+      "timeMin": 30,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:forest",
+        "type:clear"
+      ],
+      "disabledReason": "通常・隠し出口の対象一覧と、城・砦・宮殿を含むかを確定する。"
+    },
+    {
+      "name": "各ワールドの隠し1-UPキノコを集める",
+      "world": "",
+      "level": "",
+      "timeMin": 20,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:mushroom"
+      ],
+      "disabledReason": "ワールド・対象コース・配置一覧が未確定。"
+    },
+    {
+      "name": "いずれかのコクッパをファイアで倒す",
+      "world": "",
+      "level": "",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:kill"
+      ],
+      "disabledReason": "ボス名とファイアのみ／最後の一撃の条件を日本版で確認する。"
+    },
+    {
+      "name": "プクプクを9体倒す",
+      "world": "チョコレーとう",
+      "level": "コース5",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:choco",
+        "type:kill"
+      ]
+    },
+    {
+      "name": "すべてのドラゴンコインを集める",
+      "world": "チョコレーとう",
+      "level": "コース4",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:choco",
+        "type:dragon-coin"
+      ],
+      "disabledReason": "日本版の対象配置・取得枚数を確定する。"
+    },
+    {
+      "name": "コインを290枚以上集める",
+      "world": "かっぱやま",
+      "level": "きいろスイッチ",
+      "timeMin": 3,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:yoster",
+        "type:coin"
+      ]
+    },
+    {
+      "name": "コインを取らずにクリアする",
+      "world": "まおうクッパのたに",
+      "level": "コース3",
+      "timeMin": 5,
+      "exec": 3,
+      "risk": 3,
+      "tags": [
+        "area:valley",
+        "type:no-coin"
+      ]
+    },
+    {
+      "name": "入場からゴールまでちびマリオを維持してクリアする",
+      "world": "まおうクッパのたに",
+      "level": "コース4",
+      "timeMin": 6,
+      "exec": 3,
+      "risk": 3,
+      "tags": [
+        "area:valley",
+        "type:restriction"
+      ]
+    },
+    {
+      "name": "緑・赤・青・黄の成体ヨッシーに、それぞれ1回乗る（累積）",
+      "world": "",
+      "level": "",
+      "timeMin": 12,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:star",
+        "type:yoshi"
+      ]
+    },
+    {
+      "name": "6つの3-UPムーンを集める",
+      "world": "",
+      "level": "",
+      "timeMin": 22,
+      "exec": 2,
+      "risk": 3,
+      "tags": [
+        "area:multi",
+        "type:moon"
+      ]
+    },
+    {
+      "name": "スターブロックから1-UPキノコを３つ以上集める",
+      "world": "",
+      "level": "",
+      "timeMin": 8,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:mushroom"
+      ],
+      "disabledReason": "ボーナスブロックの対象3コースと取得条件を確定する。"
+    },
+    {
+      "name": "砦を3つクリアする",
+      "world": "",
+      "level": "",
+      "timeMin": 15,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:clear"
+      ]
+    },
+    {
+      "name": "スターを3つ以上集める",
+      "world": "",
+      "level": "",
+      "timeMin": 7,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:multi",
+        "type:star"
+      ],
+      "conflictGroups": [
+        "star-collection"
+      ]
+    },
+    {
+      "name": "すべての敵を倒す",
+      "world": "ドーナツへいや",
+      "level": "みどりスイッチ",
+      "timeMin": 3,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:donut",
+        "type:kill"
+      ]
+    },
+    {
+      "name": "いずれかのステージでドラゴンコインを５枚集める",
+      "world": "スペシャルコース",
+      "level": "",
+      "timeMin": 7,
+      "exec": 2,
+      "risk": 3,
+      "tags": [
+        "area:special",
+        "type:dragon-coin"
+      ]
+    },
+    {
+      "name": "コインを取らずにクリア",
+      "world": "ヨースターとう",
+      "level": "コース2",
+      "timeMin": 3,
+      "exec": 3,
+      "risk": 2,
+      "tags": [
+        "area:yoster",
+        "type:no-coin"
+      ]
+    },
+    {
+      "name": "入場からゴールまでマントを装備せず、ヨッシーに乗らずにクリアする",
+      "world": "バターブリッジ",
+      "level": "コース2",
+      "timeMin": 5,
+      "exec": 3,
+      "risk": 3,
+      "tags": [
+        "area:bridge",
+        "type:restriction"
+      ]
+    },
+    {
+      "name": "ファイアフラワーを取る",
+      "world": "ソーダのみずうみ",
+      "level": "",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:bridge",
+        "type:flower"
+      ]
+    },
+    {
+      "name": "残機を99にする",
+      "world": "",
+      "level": "",
+      "timeMin": 12,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:lives"
+      ],
+      "conflictGroups": [
+        "life-collection"
+      ]
+    },
+    {
+      "name": "ゴールスターを累計100以上獲得し、9ブロックのボーナスゲームに入る",
+      "world": "",
+      "level": "",
+      "timeMin": 6,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:multi",
+        "type:bonus"
+      ]
+    },
+    {
+      "name": "ボーナスエリアで1-UPキノコを5つ出す",
+      "world": "",
+      "level": "",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:bonus"
+      ],
+      "disabledReason": "対象の3択部屋と確定取得テクニックの許可範囲を確定する。"
+    },
+    {
+      "name": "ジュゲムの1-UPキノコを取らずにクリア (飛行禁止)",
+      "world": "まよいのもり",
+      "level": "コース4",
+      "timeMin": 5,
+      "exec": 3,
+      "risk": 3,
+      "tags": [
+        "area:forest",
+        "type:restriction"
+      ]
+    },
+    {
+      "name": "クリアする",
+      "world": "スペシャルコース",
+      "level": "コース2",
+      "timeMin": 7,
+      "exec": 3,
+      "risk": 3,
+      "tags": [
+        "area:special",
+        "type:clear"
+      ]
+    },
+    {
+      "name": "6部屋に入る",
+      "world": "まおうクッパのたに",
+      "level": "クッパのしろ",
+      "timeMin": 6,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:valley",
+        "type:clear"
+      ],
+      "disabledReason": "対象の異なる番号付き6部屋と再入場・ミスの扱いを確定する。"
+    },
+    {
+      "name": "カメックを倒す",
+      "world": "",
+      "level": "",
+      "timeMin": 4,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:vanilla",
+        "type:kill"
+      ]
+    },
+    {
+      "name": "Pバルーンを取る",
+      "world": "",
+      "level": "",
+      "timeMin": 4,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:multi",
+        "type:balloon"
+      ]
+    },
+    {
+      "name": "別エリアのサンボ3体をヨッシーで全パーツ食べる（再出現は数えない）",
+      "world": "ヨースターとう",
+      "level": "コース4",
+      "timeMin": 3,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:yoster",
+        "type:kill"
+      ]
+    },
+    {
+      "name": "ノコノコを倒す",
+      "world": "ヨースターとう",
+      "level": "しろ",
+      "timeMin": 4,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:yoster",
+        "type:kill"
+      ],
+      "disabledReason": "城内の対象と撃破方法を日本版で確認する。"
+    },
+    {
+      "name": "同一入場中にドラゴンコインを5枚取る",
+      "world": "ドーナツへいや",
+      "level": "コース1",
+      "timeMin": 4,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:donut",
+        "type:dragon-coin"
+      ]
+    },
+    {
+      "name": "入場からゴールまでヨッシーに乗らずにクリアする",
+      "world": "まよいのもり",
+      "level": "コース2",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:forest",
+        "type:restriction"
+      ]
+    },
+    {
+      "name": "メッセージブロックを15個叩く",
+      "world": "",
+      "level": "",
+      "timeMin": 10,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:multi",
+        "type:block"
+      ]
+    },
+    {
+      "name": "ボステレサを倒す",
+      "world": "",
+      "level": "",
+      "timeMin": 6,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:donut",
+        "type:kill"
+      ]
+    },
+    {
+      "name": "無敵甲羅を倒す",
+      "world": "",
+      "level": "",
+      "timeMin": 4,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:kill"
+      ]
+    },
+    {
+      "name": "残機を10増やす",
+      "world": "チョコレーとう",
+      "level": "コース5",
+      "timeMin": 6,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:choco",
+        "type:lives"
+      ],
+      "conflictGroups": [
+        "life-collection"
+      ]
+    },
+    {
+      "name": "通常ゴール",
+      "world": "チョコレーとう",
+      "level": "コース2",
+      "timeMin": 5,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:choco",
+        "type:clear"
+      ]
+    },
+    {
+      "name": "マップ上のすべての土管に入る",
+      "world": "",
+      "level": "",
+      "timeMin": 18,
+      "exec": 1,
+      "risk": 2,
+      "tags": [
+        "area:multi",
+        "type:exploration"
+      ]
+    },
+    {
+      "name": "通常ゴール",
+      "world": "まよいのもり",
+      "level": "おばけやしき",
+      "timeMin": 5,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:forest",
+        "type:clear"
+      ]
+    },
+    {
+      "name": "ピーチからもらうキノコをすべて取る",
+      "world": "",
+      "level": "",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:valley",
+        "type:mushroom"
+      ]
+    },
+    {
+      "name": "宮殿内の敵をすべて倒す",
+      "world": "バニラドーム",
+      "level": "あかスイッチ",
+      "timeMin": 4,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:vanilla",
+        "type:kill"
+      ]
+    },
+    {
+      "name": "すべてのドラゴンコインを回収",
+      "world": "バニラドーム",
+      "level": "コース4",
+      "timeMin": 5,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:vanilla",
+        "type:dragon-coin"
+      ],
+      "disabledReason": "日本版の対象配置・取得枚数を確定する。"
+    },
+    {
+      "name": "ヨッシーに乗った状態で地下BGMを流す",
+      "world": "",
+      "level": "",
+      "timeMin": 4,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:multi",
+        "type:yoshi"
+      ]
+    },
+    {
+      "name": "ツタを出す",
+      "world": "ドーナツへいや",
+      "level": "コース1",
+      "timeMin": 3,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:donut",
+        "type:block"
+      ]
+    },
+    {
+      "name": "初代マリオのBGMを流す",
+      "world": "スペシャルコース",
+      "level": "",
+      "timeMin": 12,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:special",
+        "type:exploration"
+      ]
+    },
+    {
+      "name": "スターを取る",
+      "world": "スペシャルコース",
+      "level": "コース4",
+      "timeMin": 6,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:special",
+        "type:star"
+      ],
+      "conflictGroups": [
+        "star-collection"
+      ]
+    },
+    {
+      "name": "木の実をすべて食べる",
+      "world": "ヨースターとう",
+      "level": "ヨッシーのいえ",
+      "timeMin": 2,
+      "exec": 1,
+      "risk": 1,
+      "tags": [
+        "area:yoster",
+        "type:yoshi"
+      ]
+    },
+    {
+      "name": "すべてのマグナムキラーをスピンで倒す",
+      "world": "ヨースターとう",
+      "level": "コース1",
+      "timeMin": 4,
+      "exec": 3,
+      "risk": 3,
+      "tags": [
+        "area:yoster",
+        "type:kill"
+      ],
+      "disabledReason": "対象個体・再出現・撃破判定を確定する。"
+    },
+    {
+      "name": "入場からゴールまでBボタンを押さずにクリアする（Aのスピンジャンプは可）",
+      "world": "ヨースターとう",
+      "level": "コース3",
+      "timeMin": 4,
+      "exec": 3,
+      "risk": 3,
+      "tags": [
+        "area:yoster",
+        "type:restriction"
+      ]
+    },
+    {
+      "name": "入場からゴールまでX・Yボタンを押さずにクリアする",
+      "world": "ヨースターとう",
+      "level": "コース1",
+      "timeMin": 3,
+      "exec": 2,
+      "risk": 2,
+      "tags": [
+        "area:yoster",
+        "type:restriction"
+      ]
+    }
+  ],
+  "routeAreaTimes": {
+    "plateau:butter": 3,
+    "vanilla:cheese": 8,
+    "vanilla:common": 1,
+    "vanilla:plateau": 1,
+    "かっぱやま": 1,
+    "まおうクッパのたに": 10,
+    "まよいのもり": 5,
+    "スターロード": 5,
+    "スペシャルコース": 5,
+    "ソーダのみずうみ": 2,
+    "チョコレーとう": 10,
+    "チーズブリッジ": 4,
+    "ドーナツへいや": 5,
+    "バターブリッジ": 4,
+    "バニラだいち": 5,
+    "バニラドーム": 10,
+    "ヨースターとう": 4
+  }
+}

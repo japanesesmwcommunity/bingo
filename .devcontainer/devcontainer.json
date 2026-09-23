@@ -17,11 +17,17 @@
             "userGid": "1000",
             "upgradePackages": "true"
         },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "24"
+        },
         "ghcr.io/devcontainers/features/git:1": {
             "version": "latest",
             "ppa": "false"
         }
-	}
+	},
+	"postCreateCommand": "pnpm install --frozen-lockfile && pnpm build",
+	"forwardPorts": [8080, 5173],
+	"remoteEnv": { "BINGO_DATA": "${containerWorkspaceFolder}/backend/bingo.json" }
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
