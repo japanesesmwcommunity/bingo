@@ -4,6 +4,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ROUTE_SEGMENTS, RETIRED_ROUTE_AREAS, routeSegmentLabel } from '../src/route-config.ts';
+import { forestPathsTo } from '../src/forest-routes.ts';
 const segmentIds = ROUTE_SEGMENTS.map((segment) => segment.id);
 const completeTimes = Object.fromEntries(segmentIds.map((name) => [name, 1]));
 
@@ -18,6 +19,58 @@ const browser = await chromium.launch({
 });
 const base = process.env.BINGO_URL || 'http://127.0.0.1:8080';
 after(() => browser.close());
+
+test('forest path selection requires measured clears and persists the chosen branch', async (t) => {
+  const page = await adminPage(t);
+  const catalog = JSON.parse(
+    await readFile(new URL('../../backend/bingo.json', import.meta.url), 'utf8'),
+  );
+  let document = {
+    ...catalog,
+    goals: catalog.goals.map((g) => ({ ...g, routeAreas: [] })),
+    routeAreaTimes: {},
+    revision: 'forest-0',
+  };
+  document.goals[0].timeMin = 30;
+  await page.route('**/api/admin/session', (route) =>
+    route.fulfill({
+      json: { configured: true, user: { id: '234567890123456789', username: 'admin' } },
+    }),
+  );
+  await page.route('**/api/admin/goals', (route) => {
+    if (route.request().method() === 'PUT')
+      document = { ...route.request().postDataJSON(), revision: 'forest-1' };
+    return route.fulfill({ json: document });
+  });
+  await page.goto(base + '/admin');
+  await page.locator('.forest-route-picker > summary').click();
+  const path = forestPathsTo('とりで')[0];
+  await page.locator('[name=forest-path]').selectOption({ label: path.label });
+  const save = page.getByRole('button', { name: '変更を保存', exact: true });
+  assert.equal(await save.isDisabled(), true);
+  assert.match(await page.getByRole('alert').textContent(), /未設定/);
+  await page.locator('.route-area-editor > summary').click();
+  await page.locator('.forest-times > summary').click();
+  for (const id of path.segments) {
+    await page
+      .getByRole('spinbutton', { name: `${routeSegmentLabel(id)}の基準時間（分）`, exact: true })
+      .fill('2');
+  }
+  await save.click();
+  await page.getByRole('status').waitFor();
+  assert.deepEqual(document.goals[0].routeAreas, path.segments);
+  assert.equal(document.goals[0].routeAreas.includes('unlock:forest:1:normal'), false);
+  assert.deepEqual(document.routeAreaTimes, Object.fromEntries(path.segments.map((id) => [id, 2])));
+  await page.reload();
+  await page.locator('[name=goal-name]').waitFor();
+  assert.deepEqual(
+    await page.locator('.selected-route-areas li span').allTextContents(),
+    path.segments.map(routeSegmentLabel),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('.forest-route-picker > summary').click();
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+});
 
 async function adminPage(t) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
@@ -90,7 +143,7 @@ test('admin editor searches edits adds removes saves and logs out', async (t) =>
   await page.getByRole('button', { name: 'お題を追加', exact: true }).click();
   assert.equal(await save.isDisabled(), true);
   await page.locator('[name=goal-name]').fill('編集テストのお題');
-  await page.locator('[name=goal-world]').fill('ヨースターとう');
+  await page.locator('[name=goal-world]').fill('unlock:yoster');
   await page.locator('[name=goal-level]').fill('コース4');
   await page.locator('[name=goal-time]').fill('7');
   await page.locator('[name=goal-exec]').selectOption('2');
@@ -105,7 +158,7 @@ test('admin editor searches edits adds removes saves and logs out', async (t) =>
   assert.equal(writes[0].goals.length, count + 1);
   assert.deepEqual(writes[0].goals.at(-1), {
     name: '編集テストのお題',
-    world: 'ヨースターとう',
+    world: 'unlock:yoster',
     level: 'コース4',
     timeMin: 7,
     exec: 2,
@@ -131,7 +184,7 @@ test('admin editor searches edits adds removes saves and logs out', async (t) =>
   await page.getByRole('link', { name: 'Discordでログイン', exact: true }).waitFor();
 });
 
-test('all area times are shown upfront and goal routes remain selectable', async (t) => {
+test('optional course groups can be expanded edited and saved', async (t) => {
   const page = await adminPage(t);
   let document = {
     ...JSON.parse(await readFile(new URL('../../backend/bingo.json', import.meta.url), 'utf8')),
@@ -165,54 +218,59 @@ test('all area times are shown upfront and goal routes remain selectable', async
     });
   const routes = page.locator('[name=goal-route-add]');
   await routes.waitFor();
+  await page.locator('.route-area-editor > summary').click();
   assert.equal(await page.locator('.route-area-row').count(), segmentIds.length + 1);
   assert.equal(await page.locator('[name=route-area-add], .route-area-editor button').count(), 0);
   assert.equal(await timeFor('独自区間').inputValue(), '2');
-  assert.equal(await timeFor('ヨースターとう').inputValue(), '');
+  assert.equal(await timeFor('unlock:yoster').inputValue(), '');
   assert.equal(await save.isDisabled(), true);
   assert.equal(await page.getByRole('alert').count(), 0);
-  assert.equal(await routes.locator('option[value="vanilla:plateau"]').count(), 1);
-  await routes.selectOption('ヨースターとう');
-  await routes.selectOption('donut:main');
-  assert.equal(await routes.locator('option[value="ヨースターとう"]').count(), 0);
+  assert.equal(await routes.locator('option[value="unlock:vanilla-upper"]').count(), 1);
+  await routes.selectOption('unlock:yoster');
+  await routes.selectOption('unlock:vanilla-lower');
+  assert.equal(await routes.locator('option[value="unlock:yoster"]').count(), 0);
   assert.equal(await save.isDisabled(), true);
   assert.match(await page.getByRole('alert').textContent(), /未設定/);
   await page.locator('[name=goal-time]').fill('10');
   for (const name of segmentIds) await timeFor(name).fill('1');
-  await timeFor('ヨースターとう').fill('4');
-  await timeFor('donut:main').fill('3');
+  await timeFor('unlock:yoster').fill('4');
+  await timeFor('unlock:vanilla-lower').fill('3');
   await save.click();
   await page.getByRole('status').waitFor();
   assert.deepEqual(document.routeAreaTimes, {
     ...completeTimes,
-    ヨースターとう: 4,
-    'donut:main': 3,
+    'unlock:yoster': 4,
+    'unlock:vanilla-lower': 3,
     独自区間: 2,
   });
-  assert.deepEqual(document.goals[0].routeAreas, ['ヨースターとう', 'donut:main']);
+  assert.deepEqual(document.goals[0].routeAreas, ['unlock:yoster', 'unlock:vanilla-lower']);
   assert.equal(await save.isDisabled(), true);
-  await timeFor('vanilla:plateau').fill('');
-  assert.equal(await timeFor('vanilla:plateau').inputValue(), '');
+  await timeFor('unlock:vanilla-upper').fill('');
+  assert.equal(await timeFor('unlock:vanilla-upper').inputValue(), '');
   assert.equal(await save.isDisabled(), false);
   assert.equal(await page.getByRole('alert').count(), 0);
-  await timeFor('vanilla:plateau').fill('1');
+  await timeFor('unlock:vanilla-upper').fill('1');
   assert.equal(await save.isDisabled(), true);
   assert.equal(await page.getByRole('alert').count(), 0);
-  await timeFor('ヨースターとう').fill('8');
+  await timeFor('unlock:yoster').fill('8');
   assert.equal(await save.isDisabled(), true);
   assert.match(await page.getByRole('alert').textContent(), /超えています/);
-  await timeFor('ヨースターとう').fill('5');
+  await timeFor('unlock:yoster').fill('5');
   await save.click();
   await page.getByRole('status').waitFor();
   await page.reload();
   await routes.waitFor();
   assert.equal(await save.isDisabled(), true);
-  assert.equal(await timeFor('ヨースターとう').inputValue(), '5');
+  await page.locator('.route-area-editor > summary').click();
+  assert.equal(await timeFor('unlock:yoster').inputValue(), '5');
   assert.deepEqual(await page.locator('.selected-route-areas li span').allTextContents(), [
-    'ヨースターとう',
-    routeSegmentLabel('donut:main'),
+    routeSegmentLabel('unlock:yoster'),
+    routeSegmentLabel('unlock:vanilla-lower'),
   ]);
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('.forest-connections > summary').click();
+  assert.equal(await page.locator('.forest-connections tbody tr').count(), 8);
+  assert.match(await page.locator('.forest-connections').textContent(), /森2→3→おばけやしき→4→2/);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await mkdir('tmp/browser-results', { recursive: true });
   await page.screenshot({
@@ -221,18 +279,18 @@ test('all area times are shown upfront and goal routes remain selectable', async
   });
   await page
     .getByRole('button', {
-      name: `${routeSegmentLabel('donut:main')}を経由区間から外す`,
+      name: `${routeSegmentLabel('unlock:vanilla-lower')}を経由区間から外す`,
       exact: true,
     })
     .click();
   await save.click();
   await page.getByRole('status').waitFor();
-  assert.equal(document.routeAreaTimes['donut:main'], 3);
-  assert.deepEqual(document.goals[0].routeAreas, ['ヨースターとう']);
-  await routes.selectOption('donut:main');
+  assert.equal(document.routeAreaTimes['unlock:vanilla-lower'], 3);
+  assert.deepEqual(document.goals[0].routeAreas, ['unlock:yoster']);
+  await routes.selectOption('unlock:vanilla-lower');
   await page
     .getByRole('button', {
-      name: `${routeSegmentLabel('donut:main')}を経由区間から外す`,
+      name: `${routeSegmentLabel('unlock:vanilla-lower')}を経由区間から外す`,
       exact: true,
     })
     .click();
@@ -329,26 +387,24 @@ test('legacy area totals remain as references while branch routes can be selecte
   const routes = page.locator('[name=goal-route-add]');
   const save = page.getByRole('button', { name: '変更を保存', exact: true });
   await routes.waitFor();
-  assert.match(await page.locator('.legacy-route-times').textContent(), /バニラドーム：10分/);
-  assert.match(await page.locator('.legacy-route-times').textContent(), /バニラだいち：5分/);
-  assert.equal(await page.locator('.legacy-route-times input').count(), 0);
+  assert.equal(await page.locator('.legacy-route-times').count(), 0);
   assert.equal(await routes.locator('option[value="バニラドーム"]').count(), 0);
   assert.match(await page.locator('.selected-route-areas').textContent(), /旧エリア・要再設定/);
-  await routes.selectOption('vanilla:common');
-  await routes.selectOption('vanilla:cheese');
+  await routes.selectOption('unlock:donut-star');
+  await routes.selectOption('unlock:vanilla-lower');
   assert.equal(await save.isDisabled(), true);
   assert.match(await page.getByRole('alert').textContent(), /選び直して/);
   for (const name of ['バニラドーム', 'バニラだいち'])
     await page.getByRole('button', { name: `${name}を経由区間から外す`, exact: true }).click();
-  await routes.selectOption('vanilla:plateau');
-  await routes.selectOption('plateau:butter');
+  await routes.selectOption('unlock:vanilla-upper');
+  await routes.selectOption('unlock:butter');
   await save.click();
   await page.getByRole('status').waitFor();
   assert.deepEqual(document.goals[0].routeAreas, [
-    'vanilla:common',
-    'vanilla:cheese',
-    'vanilla:plateau',
-    'plateau:butter',
+    'unlock:donut-star',
+    'unlock:vanilla-lower',
+    'unlock:vanilla-upper',
+    'unlock:butter',
   ]);
   assert.equal(document.routeAreaTimes.バニラドーム, 10);
   assert.equal(document.routeAreaTimes.バニラだいち, 5);

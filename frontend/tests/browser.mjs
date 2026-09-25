@@ -142,7 +142,7 @@ test(
     await guest.locator('[data-cell="0"]:enabled').click();
     await claimed(guest, 0, true);
     await host.waitForFunction(() =>
-      document.querySelector('[data-cell="0"] .markers').textContent.includes('参加者'),
+      Boolean(document.querySelector('[data-cell="0"]')?.style.background),
     );
     assert.equal(await host.locator('.cell:enabled').count(), 0);
     assert.equal(await host.locator('#bowser').isVisible(), false);
@@ -169,7 +169,10 @@ test(
       await page.waitForFunction(
         () => document.querySelector('#player-count')?.textContent === '1 / 4',
       );
-      assert.equal(await page.locator('[data-cell="0"] .markers').textContent(), '');
+      assert.equal(
+        await page.locator('[data-cell="0"]').evaluate((cell) => cell.style.background),
+        '',
+      );
     }
     assert.equal(await host.locator('#phase').textContent(), 'レース中');
 
@@ -373,8 +376,9 @@ test(
       await claimed(host, i, true);
     }
     assert.equal(await host.locator('#winner').isVisible(), false);
-    await guest.waitForFunction(() =>
-      document.querySelector('[data-cell="0"] .markers').textContent.includes('主催者'),
+    assert.equal(
+      await guest.locator('[data-cell="0"]').evaluate((cell) => cell.style.background),
+      '',
     );
     assert.equal(await guest.locator('[data-cell="0"]').isEnabled(), true);
     await guest.locator('[data-cell="0"]').click();
@@ -473,8 +477,10 @@ test(
     await host.locator('[data-cell="0"]:enabled').waitFor();
     await host.locator('[data-cell="0"]').click();
     await claimed(host, 0, true);
-    await guest.waitForFunction(() =>
-      document.querySelector('[data-cell="0"] .markers').textContent.includes('主催者'),
+    await guest.locator('[data-cell="0"]:disabled').waitFor();
+    assert.equal(
+      await guest.locator('[data-cell="0"]').evaluate((cell) => cell.style.background),
+      '',
     );
     assert.equal(await guest.locator('[data-cell="0"]').isEnabled(), false);
     await host.locator('[data-cell="0"]').click();

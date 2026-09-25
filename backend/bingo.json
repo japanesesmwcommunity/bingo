@@ -60,7 +60,7 @@
         "area:forest",
         "type:clear"
       ],
-      "disabledReason": "通常・隠し出口の対象一覧と、城・砦・宮殿を含むかを確定する。"
+      "disabledReason": "通常・隠しゴールの対象一覧と、城・砦・宮殿を含むかを確定する。"
     },
     {
       "name": "各ワールドの隠し1-UPキノコを集める",

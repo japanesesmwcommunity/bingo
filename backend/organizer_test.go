@@ -44,9 +44,16 @@ func TestAPIOrganizerAndFourPlayers(t *testing.T) {
 		t.Fatal("organizer missing finish notification")
 	}
 	request(t, s, "DELETE", path, nil, ownerCookie, 204)
-	if readRoomEvent(t, connection).Type != "error" {
-		t.Fatal("deleted room still accessible")
+	// Room snapshots sent before deletion can still be queued on the socket.
+	for i := 0; i < 10; i++ {
+		if readRoomEvent(t, connection).Type == "error" {
+			if _, err := s.rooms.GetRoom(created.Room.ID); err == nil {
+				t.Fatal("deleted room still accessible")
+			}
+			return
+		}
 	}
+	t.Fatal("room deletion was not delivered")
 }
 
 func TestAPIOrganizerCanWithdrawWithoutLosingAccess(t *testing.T) {

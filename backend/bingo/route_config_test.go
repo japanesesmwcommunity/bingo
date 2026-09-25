@@ -2,7 +2,6 @@ package bingo
 
 import (
 	"encoding/json"
-	"reflect"
 	"testing"
 )
 
@@ -24,13 +23,18 @@ func TestRouteSegmentConfiguration(t *testing.T) {
 		}
 		seen[segment.ID] = true
 	}
-	for _, id := range []string{"vanilla:common", "vanilla:cheese", "vanilla:plateau", "plateau:butter"} {
+	for _, id := range []string{"unlock:vanilla-lower", "unlock:vanilla-upper", "unlock:star-front", "unlock:valley-back"} {
 		if !seen[id] {
 			t.Fatal("missing branch segment", id)
 		}
 	}
-	if !reflect.DeepEqual(loadRetiredRouteAreas(routeSegmentConfig), map[string]bool{"バニラドーム": true, "バニラだいち": true, "ドーナツへいや": true, "まよいのもり": true, "チョコレーとう": true, "まおうクッパのたに": true, "スターロード": true}) {
-		t.Fatal("retired areas")
+	if len(config.Segments) != 8 {
+		t.Fatal("expected eight whole-course groups")
+	}
+	for _, id := range []string{"バニラドーム", "vanilla:common", "vanilla:plateau", "forest:castle", "star:1-secret"} {
+		if !loadRetiredRouteAreas(routeSegmentConfig)[id] {
+			t.Fatal("ambiguous old definition remains active", id)
+		}
 	}
 	t.Run("invalid bundled configuration", func(t *testing.T) {
 		defer func() {
@@ -43,11 +47,11 @@ func TestRouteSegmentConfiguration(t *testing.T) {
 }
 
 func TestBranchSegmentsOnlyDeductTheActualSharedPath(t *testing.T) {
-	times := map[string]int{"vanilla:common": 4, "vanilla:cheese": 6, "vanilla:plateau": 7, "plateau:butter": 3}
+	times := map[string]int{"unlock:yoster": 4, "unlock:vanilla-lower": 6, "unlock:vanilla-upper": 7, "unlock:butter": 3}
 	goals := [5]BingoGoal{
-		{Name: "cheese route", TimeMin: 20, Risk: 1, RouteAreas: []string{"vanilla:common", "vanilla:cheese"}},
-		{Name: "butter route", TimeMin: 25, Risk: 1, RouteAreas: []string{"vanilla:common", "vanilla:plateau", "plateau:butter"}},
-		{Name: "another cheese goal", TimeMin: 12, Risk: 1, RouteAreas: []string{"vanilla:common", "vanilla:cheese"}},
+		{Name: "cheese route", TimeMin: 20, Risk: 1, RouteAreas: []string{"unlock:yoster", "unlock:vanilla-lower"}},
+		{Name: "butter route", TimeMin: 25, Risk: 1, RouteAreas: []string{"unlock:yoster", "unlock:vanilla-upper", "unlock:butter"}},
+		{Name: "another cheese goal", TimeMin: 12, Risk: 1, RouteAreas: []string{"unlock:yoster", "unlock:vanilla-lower"}},
 		{TimeMin: 8, Risk: 1},
 		{TimeMin: 5, Risk: 1},
 	}

@@ -1,6 +1,6 @@
 import type { Goal, FinishRoute } from './types';
 import type { DraftGoal, DraftRouteArea } from './admin-types';
-import { ROUTE_SEGMENTS, RETIRED_ROUTE_AREAS, routeSegmentLabel } from './route-config';
+import { ALL_ROUTE_SEGMENTS, RETIRED_ROUTE_AREAS, routeSegmentLabel } from './route-config';
 
 export function draftGoal(goal: Goal, key: number): DraftGoal {
   const { tags, routeAreas, conflictGroups, ...fields } = goal;
@@ -128,7 +128,7 @@ export function draftRouteAreas(
 ): DraftRouteArea[] {
   const names = [
     ...new Set([
-      ...ROUTE_SEGMENTS.map((segment) => segment.id),
+      ...ALL_ROUTE_SEGMENTS.map((segment) => segment.id),
       ...Object.keys(times),
       ...extraAreas,
     ]),

@@ -1,12 +1,97 @@
 {
   "segments": [
     {
+      "id": "unlock:yoster",
+      "label": "ヨースターとう：城1まで",
+      "description": "コース2・3・4と城1をクリア。コース1・黄色スイッチは含めません。",
+      "exits": [
+        "yoster:2:normal",
+        "yoster:3:normal",
+        "yoster:4:normal",
+        "castle:1"
+      ],
+      "source": "https://www.mariowiki.com/Yoshi%27s_Island_(location)"
+    },
+    {
+      "id": "unlock:donut-star",
+      "label": "ドーナツ：スターロード入口まで",
+      "description": "コース1隠しゴール→ひみつのコース1隠しゴール→ひみつのおばけやしきのボステレサ撃破。",
+      "exits": [
+        "donut:1:secret",
+        "donut-secret:1:secret",
+        "donut-secret-house:secret"
+      ],
+      "source": "https://www.mariowiki.com/Donut_Secret_House"
+    },
+    {
+      "id": "unlock:vanilla-lower",
+      "label": "バニラ：通常ルートで城3まで",
+      "description": "コース1・2の通常ゴール→おばけやしき→コース3・4→城3。バニラ1のクリアを含みます。",
+      "exits": [
+        "vanilla:1:normal",
+        "vanilla:2:normal",
+        "vanilla-ghost-house:normal",
+        "vanilla:3:normal",
+        "vanilla:4:normal",
+        "castle:3"
+      ],
+      "source": "https://www.mariowiki.com/Vanilla_Dome"
+    },
+    {
+      "id": "unlock:vanilla-upper",
+      "label": "バニラ：隠しルートでとりでまで",
+      "description": "コース1隠しゴール→ひみつのコース1通常ゴール→ひみつのコース2・3→とりで。バニラ1のクリアを含みます。",
+      "exits": [
+        "vanilla:1:secret",
+        "vanilla-secret:1:normal",
+        "vanilla-secret:2:normal",
+        "vanilla-secret:3:normal",
+        "vanilla-fortress:normal"
+      ],
+      "source": "https://www.mariowiki.com/Twin_Bridges"
+    },
+    {
+      "id": "unlock:butter",
+      "label": "バターブリッジ：コース1・2",
+      "description": "コース1・2の攻略。城4の攻略は含めません。",
+      "exits": ["butter:1:normal", "butter:2:normal"],
+      "source": "https://www.mariowiki.com/Twin_Bridges"
+    },
+    {
+      "id": "unlock:cheese",
+      "label": "チーズブリッジ・せんべいやま",
+      "description": "チーズブリッジ通常ゴール→せんべいやま。ソーダのみずうみ・城4は含めません。",
+      "exits": ["cheese:normal", "cookie-mountain:normal"],
+      "source": "https://www.mariowiki.com/Cheese_Bridge_Area"
+    },
+    {
+      "id": "unlock:star-front",
+      "label": "スターロード：1からクッパ城正面の解放まで",
+      "description": "ネイティブスター1・2・3・4の隠しゴールを攻略。途中の入口から入った場合は、このまとまりを選びません。",
+      "exits": [
+        "star:1:secret",
+        "star:2:secret",
+        "star:3:secret",
+        "star:4:secret"
+      ],
+      "source": "https://www.mariowiki.com/Star_World"
+    },
+    {
+      "id": "unlock:valley-back",
+      "label": "クッパのたに：コース2から裏口の解放まで",
+      "description": "コース2隠しゴール→とりで攻略。コース2までの到達と、クッパ城内・クッパ戦は含めません。",
+      "exits": ["valley:2:secret", "valley-fortress:normal"],
+      "source": "https://www.mariowiki.com/Back_Door"
+    }
+  ],
+  "compatibilitySegments": [
+    {
       "id": "ヨースターとう",
       "label": "ヨースターとう"
     },
     {
       "id": "vanilla:common",
-      "label": "バニラ1の分岐前まで（出口攻略・再入場は別計上）"
+      "label": "バニラ1の分岐前まで（ゴール攻略・再入場は別計上）"
     },
     {
       "id": "vanilla:cheese",
@@ -42,55 +127,55 @@
     },
     {
       "id": "donut:main",
-      "label": "ドーナツ1通常出口から城2へ"
+      "label": "ドーナツ1通常ゴールから城2へ"
     },
     {
       "id": "donut:star",
-      "label": "ドーナツ1隠し出口からボステレサ撃破へ"
+      "label": "ドーナツ1隠しゴールからボステレサ撃破へ"
     },
     {
       "id": "forest:castle",
-      "label": "森3隠し出口から城5へ"
+      "label": "森3隠しゴールから城5へ"
     },
     {
       "id": "forest:fortress",
-      "label": "森4隠し出口から森のとりでへ"
+      "label": "森4隠しゴールから森のとりでへ"
     },
     {
       "id": "choco:main",
-      "label": "チョコレー2通常出口から本線経由で城6へ"
+      "label": "チョコレー2通常ゴールから本線経由で城6へ"
     },
     {
       "id": "choco:secret",
-      "label": "チョコレー2隠し出口からひみつ経由で城6へ"
+      "label": "チョコレー2隠しゴールからひみつ経由で城6へ"
     },
     {
       "id": "valley:front",
-      "label": "谷おばけやしき隠し出口から城7・正面へ"
+      "label": "谷おばけやしき隠しゴールから城7・正面へ"
     },
     {
       "id": "valley:back",
-      "label": "谷2隠し出口からとりで・裏口へ"
+      "label": "谷2隠しゴールからとりで・裏口へ"
     },
     {
       "id": "star:1-secret",
-      "label": "ネイティブスター1隠し出口"
+      "label": "ネイティブスター1隠しゴール"
     },
     {
       "id": "star:2-secret",
-      "label": "ネイティブスター2隠し出口"
+      "label": "ネイティブスター2隠しゴール"
     },
     {
       "id": "star:3-secret",
-      "label": "ネイティブスター3隠し出口"
+      "label": "ネイティブスター3隠しゴール"
     },
     {
       "id": "star:4-secret",
-      "label": "ネイティブスター4隠し出口・クッパ城正面への道"
+      "label": "ネイティブスター4隠しゴール・クッパ城正面への道"
     },
     {
       "id": "star:5-secret",
-      "label": "ネイティブスター5隠し出口・スペシャル入口"
+      "label": "ネイティブスター5隠しゴール・スペシャル入口"
     }
   ],
   "retiredAreas": [
@@ -100,6 +185,185 @@
     "まよいのもり",
     "チョコレーとう",
     "まおうクッパのたに",
-    "スターロード"
+    "スターロード",
+    "ヨースターとう",
+    "vanilla:common",
+    "vanilla:cheese",
+    "vanilla:plateau",
+    "plateau:butter",
+    "バターブリッジ",
+    "チーズブリッジ",
+    "スペシャルコース",
+    "ソーダのみずうみ",
+    "かっぱやま",
+    "donut:main",
+    "donut:star",
+    "forest:castle",
+    "forest:fortress",
+    "choco:main",
+    "choco:secret",
+    "valley:front",
+    "valley:back",
+    "star:1-secret",
+    "star:2-secret",
+    "star:3-secret",
+    "star:4-secret",
+    "star:5-secret"
+  ],
+  "forestConnections": [
+    {
+      "course": "コース1",
+      "normal": "コース2",
+      "secret": "おばけやしき",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_1"
+    },
+    {
+      "course": "コース2",
+      "normal": "コース3",
+      "secret": "青スイッチのきゅうでん",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_2"
+    },
+    {
+      "course": "コース3",
+      "normal": "おばけやしき",
+      "secret": "城5",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_3"
+    },
+    {
+      "course": "おばけやしき",
+      "normal": "コース4",
+      "secret": "コース1へ戻る",
+      "source": "https://www.mariowiki.com/Forest_Ghost_House"
+    },
+    {
+      "course": "コース4",
+      "normal": "コース2へ戻る",
+      "secret": "ひみつのコース",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_4"
+    },
+    {
+      "course": "ひみつのコース",
+      "normal": "とりで",
+      "secret": null,
+      "source": "https://www.mariowiki.com/Forest_Secret_Area"
+    },
+    {
+      "course": "とりで",
+      "normal": "スターロード（ネイティブスター4側）",
+      "secret": null,
+      "source": "https://www.mariowiki.com/Forest_Fortress"
+    },
+    {
+      "course": "城5",
+      "normal": "チョコレーとう コース1",
+      "secret": null,
+      "source": "https://www.mariowiki.com/Roy%27s_Castle"
+    }
+  ],
+  "forestSegments": [
+    {
+      "id": "unlock:forest:1:normal",
+      "from": "コース1",
+      "to": "コース2",
+      "label": "まよいのもり コース1 通常ゴール",
+      "description": "コース1の入場から通常ゴールまで。コース2への道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_1"
+    },
+    {
+      "id": "unlock:forest:1:secret",
+      "from": "コース1",
+      "to": "おばけやしき",
+      "label": "まよいのもり コース1 隠しゴール",
+      "description": "コース1の入場から隠しゴールまで。おばけやしきへの道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_1"
+    },
+    {
+      "id": "unlock:forest:2:normal",
+      "from": "コース2",
+      "to": "コース3",
+      "label": "まよいのもり コース2 通常ゴール",
+      "description": "コース2の入場から通常ゴールまで。コース3への道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_2"
+    },
+    {
+      "id": "unlock:forest:2:secret",
+      "from": "コース2",
+      "to": "青スイッチのきゅうでん",
+      "label": "まよいのもり コース2 隠しゴール",
+      "description": "コース2の入場から隠しゴールまで。青スイッチのきゅうでんへの道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_2"
+    },
+    {
+      "id": "unlock:forest:3:normal",
+      "from": "コース3",
+      "to": "おばけやしき",
+      "label": "まよいのもり コース3 通常ゴール",
+      "description": "コース3の入場から通常ゴールまで。おばけやしきへの道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_3"
+    },
+    {
+      "id": "unlock:forest:3:secret",
+      "from": "コース3",
+      "to": "城5",
+      "label": "まよいのもり コース3 隠しゴール",
+      "description": "コース3の入場から隠しゴールまで。城5への道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_3"
+    },
+    {
+      "id": "unlock:forest:ghost:normal",
+      "from": "おばけやしき",
+      "to": "コース4",
+      "label": "まよいのもり おばけやしき 通常ゴール",
+      "description": "おばけやしきの入場から通常ゴールまで。コース4への道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_Ghost_House"
+    },
+    {
+      "id": "unlock:forest:ghost:secret",
+      "from": "おばけやしき",
+      "to": "コース1",
+      "label": "まよいのもり おばけやしき 隠しゴール",
+      "description": "おばけやしきの入場から隠しゴールまで。コース1へ戻るへの道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_Ghost_House"
+    },
+    {
+      "id": "unlock:forest:4:normal",
+      "from": "コース4",
+      "to": "コース2",
+      "label": "まよいのもり コース4 通常ゴール",
+      "description": "コース4の入場から通常ゴールまで。コース2へ戻るへの道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_4"
+    },
+    {
+      "id": "unlock:forest:4:secret",
+      "from": "コース4",
+      "to": "ひみつのコース",
+      "label": "まよいのもり コース4 隠しゴール",
+      "description": "コース4の入場から隠しゴールまで。ひみつのコースへの道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_of_Illusion_4"
+    },
+    {
+      "id": "unlock:forest:secret:normal",
+      "from": "ひみつのコース",
+      "to": "とりで",
+      "label": "まよいのもり ひみつのコース クリア",
+      "description": "ひみつのコースの入場からクリアまで。とりでへの道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_Secret_Area"
+    },
+    {
+      "id": "unlock:forest:fortress:normal",
+      "from": "とりで",
+      "to": "スターロード（ネイティブスター4側）",
+      "label": "まよいのもり とりで クリア",
+      "description": "とりでの入場からクリアまで。スターロード（ネイティブスター4側）への道を開きます。",
+      "source": "https://www.mariowiki.com/Forest_Fortress"
+    },
+    {
+      "id": "unlock:forest:castle:normal",
+      "from": "城5",
+      "to": "チョコレーとう コース1",
+      "label": "まよいのもり 城5 クリア",
+      "description": "城5の入場からクリアまで。チョコレーとう コース1への道を開きます。",
+      "source": "https://www.mariowiki.com/Roy%27s_Castle"
+    }
   ]
 }

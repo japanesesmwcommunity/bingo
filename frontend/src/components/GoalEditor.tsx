@@ -15,6 +15,7 @@ import type { CatalogDocument, DraftGoal, DraftRouteArea } from '../admin-types'
 import type { FinishRoute } from '../types';
 import { BowserRouteEditor } from './BowserRouteEditor';
 import { RouteAreaEditor } from './RouteAreaEditor';
+import { ForestRoutePicker } from './ForestRoutePicker';
 
 export function GoalEditor() {
   const [saved, setSaved] = useState<CatalogDocument | null>(null);
@@ -323,6 +324,7 @@ export function GoalEditor() {
                     ))}
                   </select>
                 </label>
+                <ForestRoutePicker routes={current.routes} onChange={(routes) => change({ routes })} />
                 <ul className="selected-route-areas" aria-label="選択済みの経由区間">
                   {current.routes.map((name) => (
                     <li key={name}>
@@ -343,7 +345,7 @@ export function GoalEditor() {
                   ))}
                 </ul>
                 <p id="goal-routes-help" className="muted">
-                  共通区間と、実際に進む分岐の区間を選びます。両方の分岐を通るお題では両方を追加してください。
+                  基準時間を測定済みで、記載した全コース・ゴールを攻略するまとまりだけを選びます。途中までのお題や、別の入口から到達するお題には選びません。未計測なら未選択で構いません。
                 </p>
                 <div className="pair">
                   <label>

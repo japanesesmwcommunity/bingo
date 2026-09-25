@@ -1,5 +1,11 @@
 import type { DraftRouteArea } from '../admin-types';
-import { RETIRED_ROUTE_AREAS, routeSegmentLabel } from '../route-config';
+import {
+  FOREST_CONNECTIONS,
+  FOREST_SEGMENTS,
+  RETIRED_ROUTE_AREAS,
+  ROUTE_SEGMENT_DESCRIPTIONS,
+  routeSegmentLabel,
+} from '../route-config';
 
 interface RouteAreaEditorProps {
   areas: DraftRouteArea[];
@@ -8,37 +14,96 @@ interface RouteAreaEditorProps {
 }
 
 export function RouteAreaEditor({ areas, pending, onChange }: RouteAreaEditorProps) {
-  const active = areas.filter((area) => !RETIRED_ROUTE_AREAS.includes(area.name));
-  const legacy = areas.filter((area) => RETIRED_ROUTE_AREAS.includes(area.name));
+  const forestIDs = new Set(FOREST_SEGMENTS.map((segment) => segment.id));
+  const active = areas.filter(
+    (area) => !RETIRED_ROUTE_AREAS.includes(area.name) && !forestIDs.has(area.name),
+  );
+  const forest = areas.filter((area) => forestIDs.has(area.name));
   const missing = active.filter((area) => area.timeMin === '').length;
   return (
-    <details className="panel route-area-editor" open>
+    <details className="panel route-area-editor">
       <summary>
-        全区間の基準時間（{active.length}件・未設定{missing}件）
+        道中の重複を補正する（任意・{active.length}件・未設定{missing}件）
       </summary>
       <p className="muted">
-        各区間だけの解放時間を入力します。バニラ1は分岐前までを共通とし、出口攻略・再入場を別計上します。使用しない区間は未設定のまま保存できます。
+        同じコース攻略を複数のお題で共有するときだけ設定します。記載した全コース・ゴールを攻略する時間を測り、途中までのお題には選ばないでください。マップ上の移動だけを別項目にはしません。未計測なら空欄のままで構いません。
       </p>
-      {legacy.length > 0 && (
-        <div className="legacy-route-times">
-          <p>分割前の参考値（計算の重複補正には使用しません）</p>
-          <ul>
-            {legacy.map((area) => (
-              <li key={area.key}>
-                {area.name}：{area.timeMin === '' ? '未設定' : `${area.timeMin}分`}
-              </li>
+      <details className="forest-connections">
+        <summary>まよいのもり：ゴールごとの行き先</summary>
+        <p className="muted">
+          森の到達経路をお題に設定すると、同じゴールの攻略時間だけを重複補正します。通常ゴールと隠しゴールは別に数えます。
+          表はゴールして開く道を示します。到達しただけでは、その先の道は開きません。
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">コース</th>
+              <th scope="col">通常ゴール・クリア</th>
+              <th scope="col">隠しゴール</th>
+            </tr>
+          </thead>
+          <tbody>
+            {FOREST_CONNECTIONS.map((connection) => (
+              <tr key={connection.course}>
+                <th scope="row">{connection.course}</th>
+                <td>{connection.normal}</td>
+                <td>{connection.secret ?? 'なし'}</td>
+              </tr>
             ))}
-          </ul>
-          <p className="muted">
-            元の時間から各分岐の時間は決められないため、新しい区間は未設定です。お題に残っている旧エリアも、実際に通る区間へ選び直してください。
-          </p>
-        </div>
-      )}
+          </tbody>
+        </table>
+        <p className="muted">
+          城5へは森3の隠しゴールから直結します。とりでへは森4の隠しゴールに加えて、ひみつのコースの攻略が必要です。
+          おばけやしきは森1の隠しゴールからも行けるため、森2・3を経由するとは限りません。
+          通常ゴールだけでは森2→3→おばけやしき→4→2と循環します。
+        </p>
+      </details>
+      <details className="forest-times">
+        <summary>まよいのもり：ゴール別の攻略時間</summary>
+        <p className="muted">
+          入場から各ゴールまでの実測分数です。森への到達時間やマップ上の移動時間は含めません。使わないゴールは空欄のままで構いません。
+        </p>
+        <fieldset disabled={pending}>
+          <legend className="muted">通常・隠しゴールを個別に計測</legend>
+          {forest.map((area) => (
+            <label key={area.key}>
+              {routeSegmentLabel(area.name)}（分）
+              <input
+                name="forest-goal-time"
+                aria-label={`${routeSegmentLabel(area.name)}の基準時間（分）`}
+                type="number"
+                min={1}
+                max={1440}
+                step={1}
+                placeholder="未設定"
+                value={area.timeMin}
+                onChange={(event) =>
+                  onChange(
+                    areas.map((item) =>
+                      item.key === area.key
+                        ? {
+                            ...item,
+                            timeMin: event.target.value === '' ? '' : Number(event.target.value),
+                          }
+                        : item,
+                    ),
+                  )
+                }
+              />
+            </label>
+          ))}
+        </fieldset>
+      </details>
       <fieldset disabled={pending}>
         <legend className="muted">区間と基準時間</legend>
         {active.map((area) => (
           <div className="route-area-row" key={area.key}>
-            <span className="route-area-name">{routeSegmentLabel(area.name)}</span>
+            <div className="route-area-name">
+              <span>{routeSegmentLabel(area.name)}</span>
+              {Object.hasOwn(ROUTE_SEGMENT_DESCRIPTIONS, area.name) && (
+                <p className="muted">{ROUTE_SEGMENT_DESCRIPTIONS[area.name]}</p>
+              )}
+            </div>
             <label>
               基準時間（分）
               <input

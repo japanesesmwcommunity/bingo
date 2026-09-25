@@ -1,4 +1,5 @@
 import { cellState, formatGoalName } from '../model';
+import { cellFill } from '../cell-colors';
 import type { Room } from '../types';
 
 interface BingoBoardProps {
@@ -9,17 +10,22 @@ interface BingoBoardProps {
 }
 
 export function BingoBoard({ room, playerId, pending, onToggle }: BingoBoardProps) {
+  const isPlayer = room.players.some((player) => player.id === playerId);
   return (
     <div className="board-scroll">
       <div id="board" className="board" aria-label="ビンゴカード">
         {room.card.goals.map((goal, index) => {
           const state = cellState(room, playerId, index);
+          const visibleOwners = isPlayer
+            ? state.owners.filter((player) => player.id === playerId)
+            : state.owners;
           const label = formatGoalName(goal);
-          const className = `cell${state.completed ? ' mine' : state.owners.length ? ' claimed' : ''}`;
+          const className = `cell${state.completed ? ' mine' : visibleOwners.length ? ' claimed' : ''}`;
           return (
             <button
               key={index}
               className={className}
+              style={{ background: cellFill(visibleOwners) }}
               type="button"
               data-cell={index}
               disabled={state.disabled || pending}
@@ -29,13 +35,6 @@ export function BingoBoard({ room, playerId, pending, onToggle }: BingoBoardProp
               onClick={() => onToggle(index)}
             >
               <span className="goal">{label}</span>
-              <span className="markers">
-                {state.owners.map((player) => (
-                  <span className="marker" key={player.id}>
-                    {player.name}
-                  </span>
-                ))}
-              </span>
             </button>
           );
         })}

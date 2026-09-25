@@ -112,5 +112,12 @@ test('finish-route editor displays the fallback and edits every route field', ()
   buttons[1].props.onClick();
   assert.equal(result.length, 2);
   assert.equal(routes[0].name, 'star');
-  assert.equal(BowserRouteEditor({ ...props, pending: true }).props.disabled, true);
+  assert.equal(
+    elements(BowserRouteEditor({ ...props, pending: true })).find((e) => e.type === 'fieldset')
+      .props.disabled,
+    true,
+  );
+  assert.equal(BowserRouteEditor({ ...props, routes: [] }).props.open, false);
+  assert.match(markup, /通常15分/);
+  assert.match(markup, /現在地からの残り時間ではありません/);
 });

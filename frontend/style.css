@@ -287,6 +287,22 @@ textarea {
   padding: 0;
   min-width: 0;
 }
+
+.forest-connections table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.forest-connections th,
+.forest-connections td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
 .route-area-row {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
@@ -424,6 +440,11 @@ summary {
 }
 
 /* Room heading and controls */
+#room-name {
+  font-size: 22px;
+  margin: 8px 0 12px;
+}
+
 .game-heading {
   display: flex;
   justify-content: space-between;
@@ -505,35 +526,17 @@ summary {
   opacity: 1;
 }
 
-.cell.mine {
-  background: #2b4b35;
-}
-
 .cell:focus-visible {
   outline-offset: -3px;
 }
 
-.cell.claimed {
-  background: #283344;
+.cell.mine .goal,
+.cell.claimed .goal {
+  color: #fff;
 }
 
 .cell .goal {
   margin-block: auto;
-}
-
-.markers {
-  display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
-  min-height: 8px;
-}
-
-.marker {
-  font-size: 10px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 2px 4px;
-  color: var(--accent);
 }
 
 /* Bowser action and player list */
