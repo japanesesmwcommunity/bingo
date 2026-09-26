@@ -96,13 +96,6 @@ func TestWebSocketSnapshotsAndUpdates(t *testing.T) {
 	if !found {
 		t.Fatal("progress not broadcast")
 	}
-	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, hostCookie, 200)
-	update = awaitRoomVersion(t, guestSocket, game.GetRoomStatus().Version)
-	for _, player := range update.Room.Players {
-		if player.ID == host.PlayerID && !player.BowserDefeated {
-			t.Fatal("bowser not broadcast")
-		}
-	}
 
 	// Socket input never bypasses the normal authenticated update API.
 	if err := guestSocket.WriteJSON(map[string]any{"index": 4, "completed": true, "playerId": host.PlayerID}); err != nil {

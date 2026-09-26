@@ -35,7 +35,6 @@ func TestAPIOrganizerAndFourPlayers(t *testing.T) {
 	}
 	request(t, s, "POST", path+"/join", map[string]string{"playerName": "staff"}, ownerCookie, 409)
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, ownerCookie, 403)
-	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, ownerCookie, 403)
 	request(t, s, "POST", path+"/finish", nil, ownerCookie, 200)
 	event = awaitRoomVersion(t, connection, game.GetRoomStatus().Version)
 	if event.Room.FinishedAt == nil {

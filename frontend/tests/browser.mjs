@@ -44,7 +44,6 @@ async function create(page, mode = 'race', rule = 'standard', participate = true
     await form.locator('[name=mode] option:checked').textContent(),
     mode === 'race' ? 'ノーマル' : 'ロックアウト',
   );
-  await form.locator('[name=rule]').selectOption(rule);
   assert.equal(await form.locator('input[type=number]').count(), 1);
   assert.equal(await form.locator('[name=baseRoute], [name=minTarget]').count(), 0);
   await form.locator('summary').click();
@@ -191,19 +190,16 @@ test(
     await host.locator('#finish:enabled').click();
     for (const page of [host, remaining]) {
       await page.waitForFunction(() => document.querySelector('#phase')?.textContent === '終了');
-      assert.equal(
-        await page.locator('#winner').textContent(),
-        'ホストがゲームを終了しました（勝者なし）',
-      );
+      assert.equal(await page.locator('#finished').textContent(), '主催者がゲームを終了しました。');
       assert.equal(await page.locator('.cell:enabled').count(), 0);
-      assert.equal(await page.locator('#bowser').isDisabled(), true);
+      assert.equal(await page.locator('#bowser').count(), 0);
       assert.equal(await page.locator('#finish').isVisible(), false);
       assert.equal(await page.locator('.kick-player').count(), 0);
     }
     await claimed(remaining, 1, true);
     await row.waitFor({ state: 'hidden' });
     await remaining.reload();
-    await remaining.locator('#winner').waitFor({ state: 'visible' });
+    await remaining.locator('#finished').waitFor({ state: 'visible' });
     assert.equal(await remaining.locator('#timer').count(), 0);
     await claimed(remaining, 1, true);
     await mkdir('tmp/browser-results', { recursive: true });
@@ -291,7 +287,9 @@ test(
       await host.locator(`[data-cell="${index}"]:enabled`).click();
       await claimed(host, index, true);
     }
-    await host.locator('#winner').waitFor({ state: 'visible' });
+    assert.equal(await host.locator('#finished').isVisible(), false);
+    await host.locator('#finish').click();
+    await host.locator('#finished').waitFor({ state: 'visible' });
     await row.waitFor({ state: 'hidden' });
 
     const deletable = await create(host);
@@ -370,7 +368,7 @@ test(
       await host.locator(`[data-cell="${i}"]`).click();
       await claimed(host, i, true);
     }
-    assert.equal(await host.locator('#winner').isVisible(), false);
+    assert.equal(await host.locator('#finished').isVisible(), false);
     assert.equal(
       await guest.locator('[data-cell="0"]').evaluate((cell) => cell.style.background),
       '',
@@ -378,10 +376,10 @@ test(
     assert.equal(await guest.locator('[data-cell="0"]').isEnabled(), true);
     await guest.locator('[data-cell="0"]').click();
     await claimed(guest, 0, true);
-    await host.locator('#bowser').click();
-    await host.locator('#winner').waitFor({ state: 'visible' });
-    assert.match(await host.locator('#winner').textContent(), /主催者 の勝利/);
-    await guest.locator('#winner').waitFor({ state: 'visible' });
+    await host.locator('#finish').click();
+    await host.locator('#finished').waitFor({ state: 'visible' });
+    assert.match(await host.locator('#finished').textContent(), /主催者がゲームを終了/);
+    await guest.locator('#finished').waitFor({ state: 'visible' });
     assert.equal(await guest.locator('[data-cell="6"]').isEnabled(), false);
     await mkdir('tmp/browser-results', { recursive: true });
     await host.screenshot({ path: 'tmp/browser-results/race-finished.png', fullPage: true });
@@ -452,7 +450,7 @@ test(
 );
 
 test(
-  'lockout excludes other players and the line variant ends at one line',
+  'lockout excludes other players and completed lines remain editable',
   { timeout: 60000 },
   async (t) => {
     const host = await newPlayer(t),
@@ -483,72 +481,67 @@ test(
       await guest.locator(`[data-cell="${i}"]`).click();
       await claimed(guest, i, true);
     }
-    await guest.locator('#winner').waitFor({ state: 'visible' });
-    assert.match(await guest.locator('#winner').textContent(), /モバイル の勝利/);
+    assert.equal(await guest.locator('#finished').isVisible(), false);
+    await guest.locator('[data-cell="0"]:enabled').click();
+    await claimed(guest, 0, false);
+    await host.locator('#finish').click();
+    await guest.locator('#finished').waitFor({ state: 'visible' });
+    assert.match(await guest.locator('#finished').textContent(), /主催者がゲームを終了/);
     await mkdir('tmp/browser-results', { recursive: true });
     await guest.screenshot({ path: 'tmp/browser-results/mobile-lockout.png', fullPage: true });
   },
 );
 
-test(
-  'connection failures recover and bowser can be recorded before a line',
-  { timeout: 60000 },
-  async (t) => {
-    const host = await newPlayer(t);
-    let blockSockets = false;
-    let activeSocket;
-    const frames = new EventEmitter();
-    await host.routeWebSocket('**/api/rooms/*/events', (socket) => {
-      if (blockSockets) {
-        void socket.close({ code: 1013, reason: 'connection unavailable' });
-      } else {
-        activeSocket = socket;
-        socket.connectToServer().onMessage((message) => {
-          socket.send(message);
-          frames.emit('room');
-        });
-      }
-    });
-    await create(host);
-    const polls = [];
-    const isStatusRequest = (request) =>
-      request.method() === 'GET' && /\/api\/rooms\/[^/]+$/.test(new URL(request.url()).pathname);
-    host.on('request', (request) => {
-      if (isStatusRequest(request)) polls.push(Date.now());
-    });
-    await new Promise((resolve) => setTimeout(resolve, 2200));
-    assert.equal(polls.length, 0, 'a healthy websocket must not poll HTTP');
-    await host.locator('#bowser:enabled').waitFor();
-    await host.locator('#bowser').click();
-    await host.waitForFunction(
-      () => document.querySelector('#bowser').getAttribute('aria-pressed') === 'true',
-    );
-    assert.equal(await host.locator('#winner').isVisible(), false);
-    await host.locator('#bowser').click();
-    await host.waitForFunction(
-      () => document.querySelector('#bowser').getAttribute('aria-pressed') === 'false',
-    );
-
-    blockSockets = true;
-    await activeSocket.close({ code: 1013, reason: 'test disconnect' });
-    while (polls.length < 3) await host.waitForRequest(isStatusRequest);
-    for (let i = 1; i < 3; i++) {
-      const interval = polls[i] - polls[i - 1];
-      assert.ok(interval >= 600 && interval <= 1800, `fallback interval: ${interval}ms`);
+test('connection failures recover and progress remains editable', { timeout: 60000 }, async (t) => {
+  const host = await newPlayer(t);
+  let blockSockets = false;
+  let activeSocket;
+  const frames = new EventEmitter();
+  await host.routeWebSocket('**/api/rooms/*/events', (socket) => {
+    if (blockSockets) {
+      void socket.close({ code: 1013, reason: 'connection unavailable' });
+    } else {
+      activeSocket = socket;
+      socket.connectToServer().onMessage((message) => {
+        socket.send(message);
+        frames.emit('room');
+      });
     }
+  });
+  await create(host);
+  const polls = [];
+  const isStatusRequest = (request) =>
+    request.method() === 'GET' &&
+    /\/api\/rooms\/[^/]+\/session$/.test(new URL(request.url()).pathname);
+  host.on('request', (request) => {
+    if (isStatusRequest(request)) polls.push(Date.now());
+  });
+  await new Promise((resolve) => setTimeout(resolve, 2200));
+  assert.equal(polls.length, 0, 'a healthy websocket must not poll HTTP');
+  await host.locator('[data-cell="0"]:enabled').click();
+  await claimed(host, 0, true);
+  await host.locator('[data-cell="0"]:enabled').click();
+  await claimed(host, 0, false);
 
-    const failedPoll = host.waitForEvent('requestfailed', isStatusRequest);
-    await host.route('**/api/rooms/*/session', (route) =>
-      route.request().method() === 'GET' ? route.abort() : route.continue(),
-    );
-    await failedPoll;
-    assert.doesNotMatch(await host.locator('#game').innerText(), /WebSocket|同期中|再接続中/);
-    await host.unroute('**/api/rooms/*/session');
-    const reconnected = once(frames, 'room');
-    blockSockets = false;
-    await reconnected;
-    await host.context().clearCookies();
-    await host.reload();
-    await host.locator('#lobby').waitFor({ state: 'visible' });
-  },
-);
+  blockSockets = true;
+  await activeSocket.close({ code: 1013, reason: 'test disconnect' });
+  while (polls.length < 3) await host.waitForRequest(isStatusRequest);
+  for (let i = 1; i < 3; i++) {
+    const interval = polls[i] - polls[i - 1];
+    assert.ok(interval >= 600 && interval <= 1800, `fallback interval: ${interval}ms`);
+  }
+
+  const failedPoll = host.waitForEvent('requestfailed', isStatusRequest);
+  await host.route('**/api/rooms/*/session', (route) =>
+    route.request().method() === 'GET' ? route.abort() : route.continue(),
+  );
+  await failedPoll;
+  assert.doesNotMatch(await host.locator('#game').innerText(), /WebSocket|同期中|再接続中/);
+  await host.unroute('**/api/rooms/*/session');
+  const reconnected = once(frames, 'room');
+  blockSockets = false;
+  await reconnected;
+  await host.context().clearCookies();
+  await host.reload();
+  await host.locator('#lobby').waitFor({ state: 'visible' });
+});

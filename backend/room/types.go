@@ -8,6 +8,8 @@ import (
 
 const MaxPlayers = 4
 
+var playerColors = [MaxPlayers]string{"#e71e07", "#019ad7", "#fcd000", "#42b132"}
+
 type Mode string
 
 const (
@@ -38,7 +40,6 @@ type Room struct {
 	mode       Mode
 	options    bingo.Options
 	finishedAt time.Time
-	winnerID   string
 	deleted    bool
 	version    uint64
 	salt       string
@@ -55,7 +56,6 @@ type Status struct {
 	Mode             Mode            `json:"mode"`
 	Options          bingo.Options   `json:"options"`
 	FinishedAt       *time.Time      `json:"finishedAt"`
-	WinnerID         string          `json:"winnerId"`
 	EstimatedMinutes float64         `json:"estimatedMinutes"`
 }
 

@@ -45,16 +45,13 @@ func TestOrganizerDoesNotOccupyPlayerSlot(t *testing.T) {
 	if err := r.UpdatePlayerProgress(owner, 0, true); !errors.Is(err, ErrForbidden) {
 		t.Fatal(err)
 	}
-	if err := r.UpdateBowser(owner, true); !errors.Is(err, ErrForbidden) {
-		t.Fatal(err)
-	}
 	if err := r.UpdatePlayerProgress(player, 0, true); err != nil {
 		t.Fatal(err)
 	}
 	if err := r.Finish(owner); err != nil {
 		t.Fatal(err)
 	}
-	if r.GetRoomStatus().FinishedAt == nil || r.GetRoomStatus().WinnerID != "" {
+	if r.GetRoomStatus().FinishedAt == nil {
 		t.Fatal("organizer cannot finish")
 	}
 	if err := rm.DeleteRoom(r.GetRoomStatus().ID, owner); err != nil {
@@ -73,7 +70,7 @@ func TestOrganizerEnrollmentIsExplicitAndReversible(t *testing.T) {
 	if err := r.JoinOwner("unknown", "organizer", ""); !errors.Is(err, ErrForbidden) {
 		t.Fatal(err)
 	}
-	for _, args := range [][2]string{{"", ""}, {"organizer", "red"}} {
+	for _, args := range [][2]string{{"", ""}, {"   ", "red"}} {
 		if err := r.JoinOwner(owner, args[0], args[1]); err == nil {
 			t.Fatal("invalid enrollment")
 		}
@@ -110,7 +107,7 @@ func TestOrganizerEnrollmentIsExplicitAndReversible(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if r.GetRoomStatus().WinnerID != owner {
-		t.Fatal("enrolled organizer cannot win")
+	if r.GetRoomStatus().FinishedAt != nil {
+		t.Fatal("line must not auto-finish")
 	}
 }

@@ -25,9 +25,6 @@ func TestImmediatePlayAndLateEnrollment(t *testing.T) {
 	if err := r.JoinOwner(owner, "owner", ""); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.UpdateBowser(owner, true); err != nil {
-		t.Fatal(err)
-	}
 	if err := r.DeletePlayer(first); err != nil {
 		t.Fatal(err)
 	}
@@ -47,15 +44,6 @@ func TestImmediatePlayAndLateEnrollment(t *testing.T) {
 
 func TestRegenerationRequiresEmptyProgress(t *testing.T) {
 	_, r, owner := newGame(t, Race, bingo.Standard)
-	if err := r.UpdateBowser(owner, true); err != nil {
-		t.Fatal(err)
-	}
-	if err := r.GenerateCard("new", 90, 0, bingo.Standard); !errors.Is(err, ErrConflict) {
-		t.Fatal(err)
-	}
-	if err := r.UpdateBowser(owner, false); err != nil {
-		t.Fatal(err)
-	}
 	if err := r.UpdatePlayerProgress(owner, 0, true); err != nil {
 		t.Fatal(err)
 	}

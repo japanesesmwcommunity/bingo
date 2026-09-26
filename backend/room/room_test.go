@@ -104,13 +104,10 @@ func TestRoomLifecycle(t *testing.T) {
 	if err := r.GenerateCard("", 90, 20, bingo.Standard); !errors.Is(err, ErrNotFound) {
 		t.Fatal(err)
 	}
-	if err := r.UpdateBowser(host, true); !errors.Is(err, ErrNotFound) {
-		t.Fatal(err)
-	}
 }
 func TestJoinValidation(t *testing.T) {
 	_, r, _ := newGame(t, Race, bingo.Standard)
-	for _, c := range []struct{ pass, name, color string }{{"wrong", "guest", ""}, {"secret", "", ""}, {"secret", "host", ""}, {"secret", "guest", "red"}, {"secret", "guest", "#ZZZZZZ"}} {
+	for _, c := range []struct{ pass, name, color string }{{"wrong", "guest", ""}, {"secret", "", ""}, {"secret", "host", ""}} {
 		if _, err := r.AddPlayer(c.pass, c.name, c.color); err == nil {
 			t.Fatal(c)
 		}
@@ -143,66 +140,27 @@ func TestCreateValidation(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-func TestStandardVictory(t *testing.T) {
-	for _, bowserFirst := range []bool{false, true} {
-		rm, r, host := newGame(t, Race, bingo.Standard)
-		guest, _ := r.AddPlayer("secret", "guest", "")
-		if err := r.UpdatePlayerProgress(host, 0, true); err != nil {
-			t.Fatal(err)
+func TestCompletedCardsRemainEditable(t *testing.T) {
+	for _, rule := range []bingo.Rule{bingo.Standard, bingo.LineOnly} {
+		_, r, host := newGame(t, Race, rule)
+		for i := 0; i < 25; i++ {
+			if err := r.UpdatePlayerProgress(host, i, true); err != nil {
+				t.Fatal(err)
+			}
 		}
-		if err := r.GenerateCard("", 90, 20, bingo.Standard); !errors.Is(err, ErrConflict) {
+		if r.GetRoomStatus().FinishedAt != nil {
+			t.Fatal("completed card ended automatically")
+		}
+		if err := r.UpdatePlayerProgress(host, 0, false); err != nil {
 			t.Fatal(err)
 		}
 		if _, err := r.AddPlayer("secret", "late", ""); err != nil {
 			t.Fatal(err)
 		}
-		for _, index := range []int{-1, 25} {
-			if err := r.UpdatePlayerProgress(host, index, true); err == nil {
-				t.Fatal(index)
-			}
-		}
-		if err := r.UpdatePlayerProgress("missing", 0, true); !errors.Is(err, ErrNotFound) {
+		if err := r.Finish(host); err != nil {
 			t.Fatal(err)
 		}
-		if bowserFirst {
-			if err := r.UpdateBowser(host, true); err != nil {
-				t.Fatal(err)
-			}
-		}
-		if err := r.UpdatePlayerProgress(host, 0, true); err != nil {
-			t.Fatal(err)
-		}
-		if err := r.UpdatePlayerProgress(host, 0, false); err != nil {
-			t.Fatal(err)
-		}
-		p, _ := r.GetPlayer(host)
-		if p.Progress[0] {
-			t.Fatal("undo")
-		}
-		for i := 0; i < 5; i++ {
-			if err := r.UpdatePlayerProgress(host, i, true); err != nil {
-				t.Fatal(err)
-			}
-		}
-		if !bowserFirst {
-			if r.GetRoomStatus().WinnerID != "" {
-				t.Fatal("line alone must not win")
-			}
-			if err := r.UpdateBowser(host, true); err != nil {
-				t.Fatal(err)
-			}
-		}
-		status := r.GetRoomStatus()
-		if status.WinnerID != host || status.FinishedAt == nil {
-			t.Fatal("winner")
-		}
-		if err := r.UpdateBowser(host, false); !errors.Is(err, ErrConflict) {
-			t.Fatal(err)
-		}
-		if err := r.UpdatePlayerProgress(guest, 0, true); !errors.Is(err, ErrConflict) {
-			t.Fatal(err)
-		}
-		if err := rm.DeleteRoom(status.ID, host); err != nil {
+		if err := r.UpdatePlayerProgress(host, 0, true); !errors.Is(err, ErrConflict) {
 			t.Fatal(err)
 		}
 	}
@@ -232,8 +190,8 @@ func TestRaceAndLockout(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		if r.GetRoomStatus().WinnerID != guest {
-			t.Fatal("line rule")
+		if r.GetRoomStatus().FinishedAt != nil {
+			t.Fatal("line must not end the room")
 		}
 	}
 }
@@ -256,7 +214,7 @@ func TestConcurrentJoins(t *testing.T) {
 		t.Fatal("overbooked")
 	}
 }
-func TestConcurrentClaimsAndWinner(t *testing.T) {
+func TestConcurrentClaimsAndCompletedLines(t *testing.T) {
 	_, r, host := newGame(t, Lockout, bingo.LineOnly)
 	guest, _ := r.AddPlayer("secret", "guest", "")
 	var wg sync.WaitGroup
@@ -285,24 +243,19 @@ func TestConcurrentClaimsAndWinner(t *testing.T) {
 		wg.Add(1)
 		go func(id string) {
 			defer wg.Done()
-			_ = r.UpdateBowser(id, true)
+			_ = r.UpdatePlayerProgress(id, 5, true)
 			_, _ = r.GetPlayer(id)
 			_ = r.GetRoomStatus()
 		}(id)
 	}
 	wg.Wait()
-	s := r.GetRoomStatus()
-	if s.WinnerID == "" {
-		t.Fatal("no winner")
+	if r.GetRoomStatus().FinishedAt != nil {
+		t.Fatal("completed lines ended the room")
 	}
-	count = 0
-	for _, p := range s.Players {
-		if p.BowserDefeated {
-			count++
+	for _, p := range r.GetRoomStatus().Players {
+		if !p.Progress[5] {
+			t.Fatal("concurrent progress lost")
 		}
-	}
-	if count != 1 {
-		t.Fatal("multiple winners")
 	}
 }
 
@@ -339,13 +292,6 @@ func TestRoomVersions(t *testing.T) {
 	}
 	if r.GetRoomStatus().Version != version+1 {
 		t.Fatal("progress version")
-	}
-	version++
-	if err := r.UpdateBowser(host, true); err != nil {
-		t.Fatal(err)
-	}
-	if r.GetRoomStatus().Version != version+1 {
-		t.Fatal("bowser version")
 	}
 	version++
 	if err := r.UpdatePlayerProgress(host, -1, true); err == nil {

@@ -12,12 +12,9 @@ interface GameRoomProps {
 export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomProps) {
   const { pending } = controller;
   const mine = room.players.find((player) => player.id === playerId);
-  const winner = room.players.find((player) => player.id === room.winnerId);
   const owner = room.ownerId === playerId;
   const playing = !room.finishedAt;
-  const hasProgress = room.players.some(
-    (player) => player.bowserDefeated || player.progress.some(Boolean),
-  );
+  const hasProgress = room.players.some((player) => player.progress.some(Boolean));
 
   return (
     <section id="game">
@@ -96,16 +93,11 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
               void controller.join(form);
             }}
           >
-            <div className="pair">
-              <label>
-                表示名
-                <input name="playerName" maxLength={40} required autoComplete="nickname" />
-              </label>
-              <label>
-                カラー
-                <input name="color" type="color" defaultValue="#52c7a5" />
-              </label>
-            </div>
+            <label>
+              表示名
+              <input name="playerName" maxLength={40} required autoComplete="nickname" />
+            </label>
+            <p className="muted">定員4人。色は赤・青・黄・緑から自動で割り当てられます。</p>
             <button type="submit" disabled={pending || room.players.length >= 4}>
               {room.players.length >= 4 ? '満員' : 'プレイヤーとして参加'}
             </button>
@@ -119,12 +111,8 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
       <p id="seed-info" className="muted">
         シード: {room.card.seed}
       </p>
-      <div id="winner" role="status" hidden={!room.finishedAt}>
-        {winner
-          ? `${winner.name} の勝利！`
-          : room.finishedAt
-            ? 'ホストがゲームを終了しました（勝者なし）'
-            : ''}
+      <div id="finished" role="status" hidden={!room.finishedAt}>
+        主催者がゲームを終了しました。
       </div>
       <div className="play-area">
         <div>
@@ -134,16 +122,6 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
             pending={pending}
             onToggle={controller.toggleCell}
           />
-          <button
-            id="bowser"
-            type="button"
-            hidden={!mine || room.options.rule !== 'standard'}
-            disabled={!mine || !playing || pending}
-            aria-pressed={Boolean(mine?.bowserDefeated)}
-            onClick={controller.toggleBowser}
-          >
-            {mine?.bowserDefeated ? 'クッパ撃破済み（クリックで取り消し）' : 'クッパ撃破を記録'}
-          </button>
           <p className="muted" hidden={!mine}>
             自分が達成したマスをクリック。もう一度押すと取り消せます。ゲーム終了後は変更できません。
           </p>

@@ -51,7 +51,6 @@ func newServer(secure bool) *server {
 	mux.HandleFunc("POST /api/rooms/{id}/finish", s.finishRoom)
 	mux.HandleFunc("POST /api/rooms/{id}/card", s.regenerateCard)
 	mux.HandleFunc("PUT /api/rooms/{id}/progress", s.progress)
-	mux.HandleFunc("PUT /api/rooms/{id}/bowser", s.bowser)
 	mux.HandleFunc("POST /api/rooms/{id}/leave", s.leaveRoom)
 	mux.HandleFunc("DELETE /api/rooms/{id}", s.deleteRoom)
 	root, _ := fs.Sub(webFiles, "static")
@@ -345,28 +344,6 @@ func (s *server) progress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := game.UpdatePlayerProgress(id, *request.Index, *request.Completed); err != nil {
-		domainError(w, err)
-		return
-	}
-	s.notifyRoom(r.PathValue("id"))
-	writeJSON(w, 200, game.GetRoomStatus())
-}
-func (s *server) bowser(w http.ResponseWriter, r *http.Request) {
-	game, id, ok := s.authenticate(w, r)
-	if !ok {
-		return
-	}
-	var request struct {
-		Completed *bool `json:"completed"`
-	}
-	if !decode(w, r, &request) {
-		return
-	}
-	if request.Completed == nil {
-		writeError(w, 400, "completed が必要です")
-		return
-	}
-	if err := game.UpdateBowser(id, *request.Completed); err != nil {
 		domainError(w, err)
 		return
 	}

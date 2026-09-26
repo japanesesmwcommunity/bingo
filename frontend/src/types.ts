@@ -37,8 +37,6 @@ export interface Player {
   name: string;
   color: string;
   progress: boolean[];
-  hasLine: boolean;
-  bowserDefeated: boolean;
 }
 
 export interface Room {
@@ -57,7 +55,6 @@ export interface Room {
   options: { maxTime: number; minTarget: number; baseRoute: number; rule: Rule };
   finishedAt: string | null;
   estimatedMinutes: number;
-  winnerId: string;
 }
 
 export interface RoomSnapshot {

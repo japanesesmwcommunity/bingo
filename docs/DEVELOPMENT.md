@@ -22,7 +22,7 @@ Goコードは `gofmt` を使用します。
 - `backend/bingo/types.go`: お題・カード・生成条件と配置データ。
 - `backend/bingo/bingo.go`: データ読み込み、seed固定の純粋なカード選択、ライン・コスト計算。
 - `backend/room/types.go`, `backend/room/player.go`: ルームとプレイヤーのデータ・スナップショット。
-- `backend/room/room.go`: 合言葉照合、定員・参加・進捗・勝利の制御。
+- `backend/room/room.go`: 合言葉照合、定員・参加・進捗・手動終了の制御。
 - `backend/server.go`: JSON API、参加セッション、HTTP入力検証。
 - `backend/websocket.go`, `backend/websocket_types.go`: WebSocket接続、ルーム単位の配信と通信設定。
 - `frontend/src/types.ts`: ルーム・プレイヤー・カード・通信メッセージの型。
@@ -106,16 +106,15 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 | GET | `/api/rooms` | アクティブなルーム一覧（認証不要）。終了・削除済みは除外 |
 | GET | `/create?seed=...` | 互換の単独カード生成。`maxTime`, `minTarget`, `baseRoute`, `rule` をクエリで指定可能 |
 | POST | `/api/rooms` | 管理者としてルーム作成。プレイヤーは0人で、表示名・カラーは不要。`/create` も同じ処理 |
-| POST | `/{id}/join` | 合言葉と表示名で参加。既存参加者は復帰。管理者Cookieの場合は合言葉の再入力なしで表示名・カラーを登録し、明示的にプレイヤー参加 |
-| GET | `/{id}` | カード・参加者・進捗・終了日時・勝者を取得 |
+| POST | `/{id}/join` | 合言葉と表示名で参加。既存参加者は復帰。管理者Cookieの場合は合言葉の再入力なしで表示名を登録し、明示的にプレイヤー参加 |
+| GET | `/{id}` | カード・参加者・進捗・終了日時を取得 |
 | GET | `/{id}/session` | Cookieで本人の参加状態とルーム情報を取得 |
 | GET (WebSocket) | `/{id}/events` | 認証不要でルーム状態を受信。同一Origin・Cookie付きなら本人の参加状態も通知 |
 | GET | `/{id}/players/{player}` | 指定参加者の進捗を取得 |
 | DELETE | `/{id}/players/{player}` | 作成者が他プレイヤーをキック。終了前のみ。対象の全セッション・進捗・占有を解除し、ルーム状態を返す |
-| POST | `/{id}/finish` | 主催者が進行中のゲームを勝者なしで終了。進捗を保持し、更新を停止 |
-| POST | `/{id}/card` | 主催者が全員の進捗・クッパ撃破記録が空の場合に再生成 |
+| POST | `/{id}/finish` | 主催者が進行中のゲームを終了。進捗を保持し、更新を停止 |
+| POST | `/{id}/card` | 主催者が全員の進捗が空の場合に再生成 |
 | PUT | `/{id}/progress` | 自分のマスを更新 |
-| PUT | `/{id}/bowser` | 自分のクッパ撃破を更新 |
 | POST | `/{id}/leave` | 終了前にプレイヤー参加を取り消す。管理者は権限とCookieを保持しルーム状態を返す（200）。一般参加者はCookieを失効させる（204） |
 | DELETE | `/{id}` | 主催者がルーム削除 |
 
@@ -127,13 +126,13 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 
 ### WebSocketによる同期
 
-`/api/rooms/{id}/events` は受信専用です。進捗更新は既存のHTTP APIを使い、参加・退出・カード再生成・進捗・勝利をルーム内へ直ちに配信します。初回接続時と1秒ごとにも最新状態を送ります。
+`/api/rooms/{id}/events` は受信専用です。進捗更新は既存のHTTP APIを使い、参加・退出・カード再生成・進捗・終了をルーム内へ直ちに配信します。初回接続時と1秒ごとにも最新状態を送ります。
 
 ```json
 { "type": "room", "room": { "id": "...", "version": 8 }, "playerId": "..." }
 ```
 
-`room` の実際の内容は状態取得APIと同じです。`version` は変更が成功するたびに増え、画面は古いバージョンの応答を無視します。開始操作やタイマーはなく、入室直後から操作できます。
+`room` の実際の内容は状態取得APIと同じです。`version` は変更が成功するたびに増え、画面は古いバージョンの応答を無視します。開始操作・タイマー・自動勝利判定はなく、入室直後から操作できます。ライン・全マス達成後も更新でき、主催者の終了操作だけで進捗を固定します。
 
 任意のOriginから認証なしで購読できます。公開購読には `playerId` を含めず、ルーム削除時にエラーを通知して閉じます。同一Origin・参加Cookie付きの接続では本人の `playerId` を含め、セッション失効・退出時にも `{ "type": "error", "error": "説明" }` を通知して閉じます。接続数は公開・参加用を合計して1ルーム32本までです。
 
@@ -145,8 +144,6 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 {
   "name": "SMWレース",
   "passphrase": "仲間に共有する合言葉",
-  "playerName": "マリオ",
-  "color": "#52c7a5",
   "seed": "weekend-1",
   "mode": "race",
   "rule": "standard",
@@ -154,17 +151,17 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 }
 ```
 
-`name`, `passphrase`, `playerName` が必須です。`mode` は `race` / `lockout`、`rule` は `standard` / `line`。数値の `0` は `minTarget` と `baseRoute` で有効です。`maxTime=0` は既定値90になります。
+`name`, `passphrase` が必須です。`mode` は `race` / `lockout`、`rule` は `standard` / `line`。数値の `0` は `minTarget` と `baseRoute` で有効です。`maxTime=0` は既定値90になります。
 
 画面から送る時間設定は `maxTime` のみです。基本ルールではクッパ撃破までを含めたレース全体の上限です。API互換用の `minTarget`（既定0）と `baseRoute`（推定用・既定15）は画面の入力項目にしません。
 
 ### 参加
 
 ```json
-{ "passphrase": "仲間に共有する合言葉", "playerName": "ルイージ", "color": "#8b9dff" }
+{ "passphrase": "仲間に共有する合言葉", "playerName": "ルイージ" }
 ```
 
-同名参加は不可です。合言葉は前後の空白も含めて照合します。
+定員は4人です。色は赤（#e71e07）・青（#019ad7）・黄（#fcd000）・緑（#42b132）の順で空いている色を自動割り当てします。退出後は空いた色を再利用し、既存参加者の色は変えません。旧クライアントからの `color` 指定は無視します。同名参加は不可です。合言葉は前後の空白も含めて照合します。
 
 ### カード再生成
 

@@ -31,16 +31,13 @@ func TestFinish(t *testing.T) {
 			if err := r.Finish(host); !errors.Is(err, ErrConflict) {
 				t.Fatal(err)
 			}
-			if after.FinishedAt == nil || after.WinnerID != "" || after.Version != before.Version+1 || !reflect.DeepEqual(after.Players, before.Players) {
+			if after.FinishedAt == nil || after.Version != before.Version+1 || !reflect.DeepEqual(after.Players, before.Players) {
 				t.Fatal("finish must preserve progress and end without a winner", after)
 			}
 			if len(rm.ListActiveRooms()) != 0 {
 				t.Fatal("finished room remains active")
 			}
 			if err := r.UpdatePlayerProgress(guest, 1, true); !errors.Is(err, ErrConflict) {
-				t.Fatal(err)
-			}
-			if err := r.UpdateBowser(host, true); !errors.Is(err, ErrConflict) {
 				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(after, r.GetRoomStatus()) {
@@ -56,18 +53,21 @@ func TestFinish(t *testing.T) {
 	}
 }
 
-func TestFinishPreservesWinner(t *testing.T) {
+func TestFinishPreservesCompletedLine(t *testing.T) {
 	_, r, host := newGame(t, Race, bingo.LineOnly)
 	for i := 0; i < 5; i++ {
 		if err := r.UpdatePlayerProgress(host, i, true); err != nil {
 			t.Fatal(err)
 		}
 	}
+	if err := r.Finish(host); err != nil {
+		t.Fatal(err)
+	}
 	before := r.GetRoomStatus()
 	if err := r.Finish(host); !errors.Is(err, ErrConflict) {
 		t.Fatal(err)
 	}
-	if before.WinnerID != host || !reflect.DeepEqual(before, r.GetRoomStatus()) {
-		t.Fatal("winner changed")
+	if !reflect.DeepEqual(before, r.GetRoomStatus()) {
+		t.Fatal("finished progress changed")
 	}
 }

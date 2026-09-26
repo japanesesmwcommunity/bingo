@@ -539,17 +539,7 @@ summary {
   margin-block: auto;
 }
 
-/* Bowser action and player list */
-#bowser {
-  margin-top: 18px;
-  width: 100%;
-}
-
-#bowser[aria-pressed='true'] {
-  background: #484848;
-  border-color: var(--accent);
-}
-
+/* Player list */
 .player {
   padding: 16px 0;
   border-bottom: 1px solid var(--line);
@@ -576,7 +566,7 @@ summary {
 
 /* Status messages */
 #notice,
-#winner {
+#finished {
   padding: 15px 20px;
   border-radius: 9px;
   margin: 0 0 24px;
@@ -586,7 +576,7 @@ summary {
   overflow-wrap: anywhere;
 }
 
-#winner {
+#finished {
   margin-top: 22px;
   background: var(--panel);
   border-color: var(--accent);

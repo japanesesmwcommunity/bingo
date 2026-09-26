@@ -175,12 +175,6 @@ export function useRoom() {
     if (!state.disabled) void update('progress', 'PUT', { index, completed: !state.completed });
   }
 
-  function toggleBowser() {
-    const current = active.current.snapshot;
-    const mine = current?.room.players.find((player) => player.id === current.playerId);
-    if (mine) void update('bowser', 'PUT', { completed: !mine.bowserDefeated });
-  }
-
   function leave() {
     return runAction(
       () => api<void>(`/api/rooms/${active.current.roomId}/leave`, 'POST', {}),
@@ -219,7 +213,6 @@ export function useRoom() {
     create,
     join,
     toggleCell,
-    toggleBowser,
     leave,
     deleteRoom,
     copyInvite,

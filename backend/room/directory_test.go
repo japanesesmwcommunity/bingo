@@ -30,6 +30,12 @@ func TestActiveRoomDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	if len(rm.ListActiveRooms()) != 1 {
+		t.Fatal("completed line disappeared")
+	}
+	if err := game.Finish(host); err != nil {
+		t.Fatal(err)
+	}
 	if got := rm.ListActiveRooms(); got == nil || len(got) != 0 {
 		t.Fatal("finished rooms must be omitted with an empty slice", got)
 	}

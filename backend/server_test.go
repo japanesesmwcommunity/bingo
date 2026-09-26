@@ -103,13 +103,13 @@ func TestAPIEntireGame(t *testing.T) {
 	w := request(t, s, "GET", path, nil, hc, 200)
 	var before responseData
 	_ = json.Unmarshal(w.Body.Bytes(), &before)
-	if before.Room.WinnerID != "" {
+	if before.Room.FinishedAt != nil {
 		t.Fatal("early win")
 	}
-	w = request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, hc, 200)
+	w = request(t, s, "POST", path+"/finish", nil, hc, 200)
 	var status room.Status
 	_ = json.Unmarshal(w.Body.Bytes(), &status)
-	if status.WinnerID != host.PlayerID || status.FinishedAt == nil {
+	if status.FinishedAt == nil {
 		t.Fatal("missing winner")
 	}
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, gc, 409)
@@ -145,9 +145,6 @@ func TestAPIValidationAndIsolation(t *testing.T) {
 	for _, payload := range []any{map[string]bool{"completed": true}, map[string]int{"index": 0}, map[string]any{"index": 25, "completed": true}, map[string]any{"index": -1, "completed": true}, map[string]any{"index": 0, "completed": true, "playerId": "someone"}} {
 		request(t, s, "PUT", path+"/progress", payload, hc, 400)
 	}
-	request(t, s, "PUT", path+"/bowser", map[string]bool{}, hc, 400)
-	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, hc, 200)
-	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": false}, hc, 200)
 	request(t, s, "GET", path+"/session", nil, &http.Cookie{Name: "bingo_session", Value: "forged"}, 401)
 	s.mu.Lock()
 	expired := s.sessions[hc.Value]
@@ -277,13 +274,12 @@ func TestConcurrentAPI(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, cookie, 200)
 }
 func TestDecodeErrorsOnAllMutations(t *testing.T) {
 	s := testServer(t)
 	host, cookie := createTestRoom(t, s, "standard")
 	path := "/api/rooms/" + host.Room.ID
-	for _, endpoint := range []struct{ method, suffix string }{{"POST", "/join"}, {"POST", "/card"}, {"PUT", "/progress"}, {"PUT", "/bowser"}} {
+	for _, endpoint := range []struct{ method, suffix string }{{"POST", "/join"}, {"POST", "/card"}, {"PUT", "/progress"}} {
 		request(t, s, endpoint.method, path+endpoint.suffix, map[string]string{"unexpected": "field"}, cookie, 400)
 		request(t, s, endpoint.method, path+endpoint.suffix, nil, nil, func() int {
 			if endpoint.suffix == "/join" {

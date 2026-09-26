@@ -1,6 +1,6 @@
 # 観戦APIとNodeCG連携
 
-観戦APIは認証不要の読み取り専用APIです。ルームIDが分かれば誰でもカード・全員の進捗・勝敗を取得できます。トークンの発行や参加Cookieは不要で、参加枠も使いません。試合終了後も、ルームが削除されるまでは結果を取得できます。
+観戦APIは認証不要の読み取り専用APIです。ルームIDが分かれば誰でもカード・全員の進捗・終了状態を取得できます。トークンの発行や参加Cookieは不要で、参加枠も使いません。試合終了後も、ルームが削除されるまでは結果を取得できます。
 
 ## 読み取りと更新通知
 
@@ -33,17 +33,16 @@ const snapshot = await response.json();
     mode,                  // "race" | "lockout"
     options: { rule, maxTime, minTarget, baseRoute }, // rule: "standard" | "line"
     card: { goals: [{ name, world, level, timeMin, exec, risk, tags, ... }, ...], seed, ... },
-    players: [{ id, name, color, progress, hasLine, bowserDefeated }, ...],
+    players: [{ id, name, color, progress }, ...],
     finishedAt,           // ISO 8601形式、未終了ならnull
-    estimatedMinutes,
-    winnerId              // 勝者なしなら空文字
+    estimatedMinutes
   }
 }
 ```
 
 `card.goals` は左上から行優先の25件です。各プレイヤーの `progress` は同じ添字の25個の真偽値です。Raceでは同じマスを複数人が達成できます。Lockoutでは1人だけです。参加者の識別には配列位置ではなく `id` を使ってください。名前の表示にはHTML挿入ではなくテキスト描画を使います。
 
-`version` はルームの変更で増加します。開始操作やタイマーはありません。終了・勝者の判定はAPIの値を使います。初回・再接続時には受信した状態全体で置き換えます。
+`version` はルームの変更で増加します。開始操作・タイマー・自動の勝利判定はありません。ラインや全マスが揃っても状態を更新でき、主催者の終了操作で固定します。終了状態の判定はAPIの値を使います。初回・再接続時には受信した状態全体で置き換えます。
 
 存在しないルーム・削除済みルームではHTTP取得とWebSocket接続時に `404` を返します。購読中にルームが削除されると `{ "type": "error", "error": "ルームが削除されました" }` を送り、WebSocketをコード1008で閉じます。接続数は参加用WebSocketと合計で1ルーム32本までで、超過は `429` です。
 
@@ -54,7 +53,7 @@ const snapshot = await response.json();
 ## NodeCG側の実装方針
 
 1. extensionがHTTPで取得、またはWebSocketで購読します。接続先はHTTPSなら `wss://`、HTTPなら `ws://` です。必要な設定はビンゴサーバーのURLとルームIDだけです。
-2. 受信した `room` をReplicantへ格納し、graphicsはその変更を購読して描画します。進捗や勝敗はビンゴ側で管理します。
+2. 受信した `room` をReplicantへ格納し、graphicsはその変更を購読して描画します。進捗や終了状態はビンゴ側で管理します。
 3. 通信断では最後の表示を保持しつつ、別の接続状態で更新停止を示します。通常の切断はバックオフ付きで再接続し、再接続直後の全状態で同期します。必要なら切断中だけHTTPポーリングを使います。
 4. `404` またはルーム削除のエラーでは再接続を止めます。ルームを切り替えるときは古い購読を閉じ、古い状態をクリアします。
 

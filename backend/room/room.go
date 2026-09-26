@@ -150,7 +150,7 @@ func (r *Room) JoinOwner(ownerID, name, color string) error {
 }
 
 // addPlayer requires the room write lock.
-func (r *Room) addPlayer(id, name, color string) error {
+func (r *Room) addPlayer(id, name, _ string) error {
 	if !r.finishedAt.IsZero() {
 		return ErrConflict
 	}
@@ -166,11 +166,17 @@ func (r *Room) addPlayer(id, name, color string) error {
 			return fmt.Errorf("その表示名はすでに使われています")
 		}
 	}
-	if color == "" {
-		color = "#52c7a5"
+	// Ignore legacy client colors; assign the first unused palette slot.
+	used := make(map[string]bool, len(r.players))
+	for _, p := range r.players {
+		used[p.Color] = true
 	}
-	if len(color) != 7 || color[0] != '#' || strings.Trim(color[1:], "0123456789abcdefABCDEF") != "" {
-		return fmt.Errorf("カラーは #RRGGBB 形式で指定してください")
+	var color string
+	for _, candidate := range playerColors {
+		if !used[candidate] {
+			color = candidate
+			break
+		}
 	}
 	r.players[id] = &Player{ID: id, Name: name, Color: color}
 	r.version++
@@ -233,7 +239,7 @@ func (r *Room) GetPlayer(id string) (PlayerStatus, error) {
 func (r *Room) GetRoomStatus() Status {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	s := Status{ID: r.id, Name: r.name, OwnerID: r.ownerID, Card: r.card.Clone(), Mode: r.mode, Options: r.options, WinnerID: r.winnerID, Players: make([]PlayerStatus, 0, len(r.players)), EstimatedMinutes: bingo.EstimatedMinutes(r.card, r.options)}
+	s := Status{ID: r.id, Name: r.name, OwnerID: r.ownerID, Card: r.card.Clone(), Mode: r.mode, Options: r.options, Players: make([]PlayerStatus, 0, len(r.players)), EstimatedMinutes: bingo.EstimatedMinutes(r.card, r.options)}
 	s.Version = r.version
 	for _, p := range r.players {
 		s.Players = append(s.Players, p.status())
@@ -256,9 +262,6 @@ func (r *Room) GenerateCard(seed string, maxTime, minTarget int, rule bingo.Rule
 		return ErrConflict
 	}
 	for _, p := range r.players {
-		if p.bowserDefeated {
-			return ErrConflict
-		}
 		for _, completed := range p.progress {
 			if completed {
 				return ErrConflict
@@ -317,19 +320,6 @@ func (r *Room) UpdatePlayerProgress(id string, index int, completed bool) error 
 		}
 	}
 	r.players[id].updateProgress(index, completed)
-	r.checkWinner(id)
-	r.version++
-	return nil
-}
-
-func (r *Room) UpdateBowser(id string, completed bool) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if err := r.canPlay(id); err != nil {
-		return err
-	}
-	r.players[id].bowserDefeated = completed
-	r.checkWinner(id)
 	r.version++
 	return nil
 }
@@ -346,12 +336,4 @@ func (r *Room) canPlay(id string) error {
 		return ErrConflict
 	}
 	return nil
-}
-
-func (r *Room) checkWinner(id string) {
-	p := r.players[id]
-	if bingo.HasLine(p.progress) && (r.options.Rule == bingo.LineOnly || p.bowserDefeated) {
-		r.winnerID = id
-		r.finishedAt = time.Now()
-	}
 }

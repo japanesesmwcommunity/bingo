@@ -21,16 +21,15 @@ func TestAPIFinishAndBroadcast(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &status); err != nil {
 		t.Fatal(err)
 	}
-	if status.FinishedAt == nil || status.WinnerID != "" || status.Version != initial.Room.Version+1 {
+	if status.FinishedAt == nil || status.Version != initial.Room.Version+1 {
 		t.Fatal(status)
 	}
 	event := awaitRoomVersion(t, connection, status.Version)
-	if event.Room.FinishedAt == nil || !event.Room.FinishedAt.Equal(*status.FinishedAt) || event.Room.WinnerID != "" {
+	if event.Room.FinishedAt == nil || !event.Room.FinishedAt.Equal(*status.FinishedAt) {
 		t.Fatal("finish not broadcast", event)
 	}
 
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, gc, 409)
 	request(t, s, "POST", path+"/finish", nil, hc, 409)
-	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, hc, 409)
 	request(t, s, "DELETE", path, nil, hc, 204)
 }

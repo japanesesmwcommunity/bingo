@@ -50,7 +50,7 @@ func TestSpectatorPublicReadOnly(t *testing.T) {
 	}
 	for _, action := range []struct{ method, suffix string }{
 		{"GET", "/session"}, {"POST", "/finish"}, {"POST", "/card"},
-		{"PUT", "/progress"}, {"PUT", "/bowser"}, {"DELETE", ""},
+		{"PUT", "/progress"}, {"DELETE", ""},
 	} {
 		response := request(t, s, action.method, path+action.suffix, nil, nil, 401)
 		if response.Header().Get("Access-Control-Allow-Origin") != "" {
@@ -130,12 +130,12 @@ func TestSpectatorStreamUpdatesAndDeletion(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		request(t, s, "PUT", path+"/progress", map[string]any{"index": i, "completed": true}, cookie, 200)
 	}
-	winning := awaitSpectatorEvent(t, connection, func(event spectatorEvent) bool { return event.Room != nil && event.Room.WinnerID == host.PlayerID })
-	if winning.Room.FinishedAt == nil || !winning.Room.Players[0].HasLine || !winning.Room.Players[0].Progress[4] {
+	winning := awaitSpectatorEvent(t, connection, func(event spectatorEvent) bool { return event.Room != nil && event.Room.Players[0].Progress[4] })
+	if winning.Room.FinishedAt != nil || !winning.Room.Players[0].Progress[4] {
 		t.Fatal("incomplete winning state")
 	}
 	reconnected := dialSpectator(t, base, id, http.Header{"Origin": {"https://nodecg.example"}, "Sec-Fetch-Site": {"cross-site"}})
-	if readSpectatorEvent(t, reconnected).Room.WinnerID != host.PlayerID {
+	if !readSpectatorEvent(t, reconnected).Room.Players[0].Progress[4] {
 		t.Fatal("stale reconnect")
 	}
 	request(t, s, "GET", "/api/rooms/"+id, nil, nil, 200)

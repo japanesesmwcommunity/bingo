@@ -56,16 +56,10 @@ export function Lobby({ create, join, pending, inviteRoomId, lobbyView, hidden }
           <div className="pair">
             <label>
               対戦形式
+              <input type="hidden" name="rule" value="line" />
               <select name="mode">
                 <option value="race">{MODE_LABELS.race}</option>
                 <option value="lockout">{MODE_LABELS.lockout}</option>
-              </select>
-            </label>
-            <label>
-              勝利条件
-              <select name="rule">
-                <option value="standard">1ライン ＋ クッパ撃破</option>
-                <option value="line">1ラインのみ（派生）</option>
               </select>
             </label>
           </div>
@@ -80,7 +74,7 @@ export function Lobby({ create, join, pending, inviteRoomId, lobbyView, hidden }
               <input name="maxTime" type="number" min="1" max="1440" defaultValue="90" required />
             </label>
             <small>
-              基本ルールでは、ビンゴを揃えてクッパを倒すまでの合計時間です。この時間内での完走を目安にカードを生成します。既存の時間・経路は実測前のため暫定見積もりです。指定時間内の完走を保証するものではありません。
+              ビンゴ1ラインを揃えるまでの時間を目安にカードを生成します。自動の勝利判定や制限時間ではありません。既存の時間・経路は実測前のため暫定見積もりです。指定時間内の完走を保証するものではありません。
             </small>
           </details>
           <button type="submit" disabled={pending} className="primary">
@@ -104,16 +98,11 @@ export function Lobby({ create, join, pending, inviteRoomId, lobbyView, hidden }
               placeholder="招待されたルームID"
             />
           </label>
-          <div className="pair">
-            <label>
-              あなたの表示名
-              <input name="playerName" maxLength={40} required autoComplete="nickname" />
-            </label>
-            <label>
-              カラー
-              <input name="color" type="color" defaultValue="#8b9dff" />
-            </label>
-          </div>
+          <label>
+            あなたの表示名
+            <input name="playerName" maxLength={40} required autoComplete="nickname" />
+          </label>
+          <p className="muted">定員4人。色は赤・青・黄・緑から自動で割り当てられます。</p>
           <label>
             合言葉
             <input

@@ -31,11 +31,7 @@ export function PlayerList({
               {player.id === playerId ? '（あなた）' : ''}
               {player.id === ownerId ? ' · 主催' : ''}
             </strong>
-            <p>
-              {player.progress.filter(Boolean).length} / 25 マス ·{' '}
-              {player.hasLine ? 'ビンゴ！' : '挑戦中'}
-              {player.bowserDefeated ? ' · クッパ撃破済' : ''}
-            </p>
+            <p>{player.progress.filter(Boolean).length} / 25 マス</p>
             {playerId === ownerId && player.id !== ownerId && !finished && (
               <button
                 type="button"

@@ -70,19 +70,19 @@ func TestKickReleasesLockoutAndPreservesFinishedResults(t *testing.T) {
 	if err := r.UpdatePlayerProgress(guest, 1, true); !errors.Is(err, ErrNotFound) {
 		t.Fatal(err)
 	}
-	if err := r.UpdateBowser(guest, true); !errors.Is(err, ErrNotFound) {
-		t.Fatal(err)
-	}
 	for i := 0; i < 5; i++ {
 		if err := r.UpdatePlayerProgress(owner, i, true); err != nil {
 			t.Fatal(err)
 		}
 	}
+	if err := r.Finish(owner); err != nil {
+		t.Fatal(err)
+	}
 	before := r.GetRoomStatus()
 	if err := r.KickPlayer(owner, guest); !errors.Is(err, ErrConflict) {
 		t.Fatal(err)
 	}
-	if before.WinnerID != owner || !reflect.DeepEqual(before, r.GetRoomStatus()) {
+	if !reflect.DeepEqual(before, r.GetRoomStatus()) {
 		t.Fatal("finished result changed")
 	}
 	if err := rm.DeleteRoom(before.ID, owner); err != nil {
