@@ -43,7 +43,8 @@ func newServer(secure bool) *server {
 	mux.HandleFunc("POST /api/rooms", s.createRoom)
 	mux.HandleFunc("GET /api/rooms", s.listRooms)
 	mux.HandleFunc("POST /api/rooms/{id}/join", s.joinRoom)
-	mux.HandleFunc("GET /api/rooms/{id}", s.roomStatus)
+	mux.HandleFunc("GET /api/rooms/{id}", s.spectatorStatus)
+	mux.HandleFunc("GET /api/rooms/{id}/session", s.roomStatus)
 	mux.HandleFunc("GET /api/rooms/{id}/events", s.roomEvents)
 	mux.HandleFunc("GET /api/rooms/{id}/players/{player}", s.playerStatus)
 	mux.HandleFunc("DELETE /api/rooms/{id}/players/{player}", s.kickPlayer)
@@ -66,7 +67,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
 	w.Header().Set("Cache-Control", "no-store")
 	if r.Method != "GET" && r.Method != "HEAD" {
-		// Custom header prevents cross-origin forms; this server never grants CORS.
+		// Custom header prevents cross-origin forms; write APIs never grant CORS.
 		if r.Header.Get("X-Requested-With") != "bingo" || r.Header.Get("Sec-Fetch-Site") == "cross-site" {
 			writeError(w, 403, "同じサイトから操作してください")
 			return
@@ -89,6 +90,7 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 }
 
 func (s *server) listRooms(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	writeJSON(w, http.StatusOK, map[string]any{"rooms": s.rooms.ListActiveRooms()})
 }
 func writeError(w http.ResponseWriter, status int, message string) {
@@ -263,8 +265,10 @@ func (s *server) roomStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"room": game.GetRoomStatus(), "playerId": id})
 }
 func (s *server) playerStatus(w http.ResponseWriter, r *http.Request) {
-	game, _, ok := s.authenticate(w, r)
-	if !ok {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	game, err := s.rooms.GetRoom(r.PathValue("id"))
+	if err != nil {
+		domainError(w, err)
 		return
 	}
 	player, err := game.GetPlayer(r.PathValue("player"))

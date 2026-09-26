@@ -32,7 +32,7 @@ func TestPublicRoomDirectory(t *testing.T) {
 	if len(data.Rooms[0]) != 7 || strings.Contains(response.Body.String(), "secret") {
 		t.Fatal("directory must only expose public summary fields", response.Body.String())
 	}
-	request(t, s, "GET", path, nil, nil, 401)
+	request(t, s, "GET", path+"/session", nil, nil, 401)
 	request(t, s, "DELETE", path, nil, cookie, 204)
 	after := request(t, s, "GET", "/api/rooms", nil, nil, 200)
 	if strings.TrimSpace(after.Body.String()) != `{"rooms":[]}` {

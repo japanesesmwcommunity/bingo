@@ -1,5 +1,7 @@
 # 開発とAPI
 
+NodeCGなどからの読み取り専用アクセスは [観戦APIとNodeCG連携](spectator-api.md) を参照してください。ルームIDだけで利用できる、認証不要のHTTP取得・WebSocket購読を提供します。
+
 ## 作業ディレクトリ
 
 ルートのpnpmコマンドは `frontend/` へ転送します。Goの実行・テストは `backend/` で行います。Viteの出力 `backend/static/` をGoに埋め込みます。区間定義は `backend/bingo/route_segments.json` をフロントから参照し、複製しません。
@@ -95,7 +97,7 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 
 更新系のリクエストには `X-Requested-With: bingo` が必要です。本文がある場合は `Content-Type: application/json` を指定します。未知のフィールド・複数JSON・4KBを超える本文は拒否します。
 
-ルーム一覧・作成・参加以外のルームAPIは作成時または参加時のCookieが必要です。APIの基点は `/api/rooms/{id}` です。`id` はUUIDです。作成・参加・状態取得は `{ "room": ..., "playerId": "..." }` を返します。`playerId` はセッションの本人識別子で、`ownerId` と一致すれば管理者、`players` に存在すればプレイヤーです。管理者は参加せずに認証・閲覧・管理できます。
+ルーム一覧・詳細・プレイヤー進捗・WebSocket通知は認証不要です。本人の参加状態確認と更新・管理操作には作成時または参加時のCookieが必要です。APIの基点は `/api/rooms/{id}` です。`id` はUUIDです。作成・参加・`GET /api/rooms/{id}/session` は `{ "room": ..., "playerId": "..." }` を返します。`playerId` はセッションの本人識別子で、`ownerId` と一致すれば管理者、`players` に存在すればプレイヤーです。管理者は参加せずに認証・閲覧・管理できます。
 
 | メソッド | パス | 動作 |
 | --- | --- | --- |
@@ -106,7 +108,8 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 | POST | `/api/rooms` | 管理者としてルーム作成。プレイヤーは0人で、表示名・カラーは不要。`/create` も同じ処理 |
 | POST | `/{id}/join` | 合言葉と表示名で参加。既存参加者は復帰。管理者Cookieの場合は合言葉の再入力なしで表示名・カラーを登録し、明示的にプレイヤー参加 |
 | GET | `/{id}` | カード・参加者・進捗・開始/終了日時・経過秒・勝者を取得 |
-| GET (WebSocket) | `/{id}/events` | 参加Cookieと同一Originで接続し、ルーム状態を受信 |
+| GET | `/{id}/session` | Cookieで本人の参加状態とルーム情報を取得 |
+| GET (WebSocket) | `/{id}/events` | 認証不要でルーム状態を受信。同一Origin・Cookie付きなら本人の参加状態も通知 |
 | GET | `/{id}/players/{player}` | 指定参加者の進捗を取得 |
 | DELETE | `/{id}/players/{player}` | 作成者が他プレイヤーをキック。開始前・対戦中のみ。対象の全セッション・進捗・占有を解除し、ルーム状態を返す |
 | POST | `/{id}/start` | 主催者が開始。1名から動作確認可能 |
@@ -119,7 +122,7 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 
 表中の `/{id}` は `/api/rooms/{id}` の略記です。
 
-一覧は `{ "rooms": [...] }` を返します。各要素は `id`, `name`, `mode`, `rule`, `playerCount`, `maxPlayers`, `status`（`waiting` / `playing`）のみです。カード・進捗・参加者情報・合言葉は含みません。参加前のルーム情報取得には引き続きCookieが必要です。
+一覧は `{ "rooms": [...] }` を返します。各要素は `id`, `name`, `mode`, `rule`, `playerCount`, `maxPlayers`, `status`（`waiting` / `playing`）のみです。カード・進捗・参加者情報・合言葉は含みません。ルーム詳細は `GET /api/rooms/{id}` で認証なしに取得でき、`{ "type": "room", "room": ... }` を返します。一覧・詳細・プレイヤー進捗は外部Originからも取得できます。
 
 トップページは一覧、`#create` は作成フォーム、`#room={id}` は参加フォームまたは参加済みルームの画面です。満員・対戦中のルームも開けますが、新規参加は従来どおり拒否され、参加Cookieのあるブラウザだけが復帰できます。
 
@@ -133,9 +136,9 @@ docker run --name smw-bingo-admin --env-file .env -p 8080:8080 \
 
 `room` の実際の内容は状態取得APIと同じです。`version` は変更が成功するたびに増え、画面は古いバージョンの応答を無視します。同じバージョンでも経過秒は更新されます。
 
-セッション失効・退出・ルーム削除時には `{ "type": "error", "error": "説明" }` を送り、接続を閉じます。Originが一致しない接続や未参加の接続は拒否します。接続数は1ルーム32本までです。
+任意のOriginから認証なしで購読できます。公開購読には `playerId` を含めず、ルーム削除時にエラーを通知して閉じます。同一Origin・参加Cookie付きの接続では本人の `playerId` を含め、セッション失効・退出時にも `{ "type": "error", "error": "説明" }` を通知して閉じます。接続数は公開・参加用を合計して1ルーム32本までです。
 
-画面は受信が3.5秒途絶えた接続を再接続し、その間は1秒ごとのHTTP取得で同期します。HTTPでも参加権限が失われていれば参加画面に戻ります。リバースプロキシではWebSocket Upgradeを転送し、HTTPS終端時は `SECURE_COOKIE=true` を指定してください。
+画面は受信が3.5秒途絶えた接続を再接続し、その間は1秒ごとの `/api/rooms/{id}/session` のHTTP取得で同期します。HTTPでも参加権限が失われていれば参加画面に戻ります。リバースプロキシではWebSocket Upgradeを転送し、HTTPS終端時は `SECURE_COOKIE=true` を指定してください。
 
 ### ルーム作成
 

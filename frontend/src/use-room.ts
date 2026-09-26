@@ -69,7 +69,7 @@ export function useRoom() {
     const requestedRevision = session.revision;
     session.polling = true;
     try {
-      const data = await api<RoomSnapshot>(`/api/rooms/${requestedRoom}`);
+      const data = await api<RoomSnapshot>(`/api/rooms/${requestedRoom}/session`);
       if (session.roomId !== requestedRoom || session.revision !== requestedRevision) return;
       enter(data);
     } catch (error) {

@@ -88,7 +88,7 @@ func TestAPIEntireGame(t *testing.T) {
 	id := host.Room.ID
 	path := "/api/rooms/" + id
 	guest, gc := joinTestRoom(t, s, id, "guest")
-	request(t, s, "GET", path, nil, nil, 401)
+	request(t, s, "GET", path+"/session", nil, nil, 401)
 	request(t, s, "GET", path, nil, hc, 200)
 	request(t, s, "GET", path+"/players/"+guest.PlayerID, nil, hc, 200)
 	request(t, s, "GET", path+"/players/missing", nil, hc, 404)
@@ -120,7 +120,7 @@ func TestAPIEntireGame(t *testing.T) {
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, gc, 409)
 	request(t, s, "DELETE", path, nil, gc, 403)
 	request(t, s, "DELETE", path, nil, hc, 204)
-	request(t, s, "GET", path, nil, gc, 401)
+	request(t, s, "GET", path+"/session", nil, gc, 401)
 }
 func TestAPIJoinCapacityAndLeave(t *testing.T) {
 	s := testServer(t)
@@ -134,7 +134,7 @@ func TestAPIJoinCapacityAndLeave(t *testing.T) {
 	joinTestRoom(t, s, host.Room.ID, "fourth")
 	request(t, s, "POST", path+"/join", map[string]string{"passphrase": "secret", "playerName": "fifth"}, nil, 409)
 	request(t, s, "POST", path+"/leave", nil, gc, 204)
-	request(t, s, "GET", path, nil, gc, 401)
+	request(t, s, "GET", path+"/session", nil, gc, 401)
 	joinTestRoom(t, s, host.Room.ID, "replacement")
 	request(t, s, "DELETE", path, nil, hc, 204)
 }
@@ -143,8 +143,8 @@ func TestAPIValidationAndIsolation(t *testing.T) {
 	host, hc := createTestRoom(t, s, "standard")
 	path := "/api/rooms/" + host.Room.ID
 	other, oc := createTestRoom(t, s, "standard")
-	request(t, s, "GET", path, nil, oc, 401)
-	request(t, s, "GET", "/api/rooms/"+other.Room.ID, nil, hc, 401)
+	request(t, s, "GET", path+"/session", nil, oc, 401)
+	request(t, s, "GET", "/api/rooms/"+other.Room.ID+"/session", nil, hc, 401)
 	request(t, s, "POST", "/api/rooms", map[string]string{"name": "bad"}, nil, 400)
 	request(t, s, "POST", path+"/card", map[string]int{"maxTime": 1}, hc, 400)
 	request(t, s, "POST", path+"/start", nil, hc, 200)
@@ -154,13 +154,13 @@ func TestAPIValidationAndIsolation(t *testing.T) {
 	request(t, s, "PUT", path+"/bowser", map[string]bool{}, hc, 400)
 	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, hc, 200)
 	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": false}, hc, 200)
-	request(t, s, "GET", path, nil, &http.Cookie{Name: "bingo_session", Value: "forged"}, 401)
+	request(t, s, "GET", path+"/session", nil, &http.Cookie{Name: "bingo_session", Value: "forged"}, 401)
 	s.mu.Lock()
 	expired := s.sessions[hc.Value]
 	expired.Expires = time.Now().Add(-time.Second)
 	s.sessions[hc.Value] = expired
 	s.mu.Unlock()
-	request(t, s, "GET", path, nil, hc, 401)
+	request(t, s, "GET", path+"/session", nil, hc, 401)
 	s.mu.Lock()
 	if _, ok := s.sessions[hc.Value]; ok {
 		t.Fatal("expired session retained")
@@ -263,7 +263,7 @@ func TestSessionPruningAndMissingMember(t *testing.T) {
 	if err := game.DeletePlayer(value.PlayerID); err != nil {
 		t.Fatal(err)
 	}
-	request(t, s, "GET", "/api/rooms/"+host.Room.ID, nil, gc, 404)
+	request(t, s, "GET", "/api/rooms/"+host.Room.ID+"/session", nil, gc, 404)
 	if err := s.rooms.DeleteRoom(host.Room.ID, host.PlayerID); err != nil {
 		t.Fatal(err)
 	}
@@ -299,7 +299,7 @@ func TestDecodeErrorsOnAllMutations(t *testing.T) {
 			return 401
 		}())
 	}
-	for _, endpoint := range []struct{ method, suffix string }{{"POST", "/start"}, {"POST", "/leave"}, {"DELETE", ""}, {"GET", "/players/unknown"}} {
+	for _, endpoint := range []struct{ method, suffix string }{{"POST", "/start"}, {"POST", "/leave"}, {"DELETE", ""}} {
 		request(t, s, endpoint.method, path+endpoint.suffix, nil, nil, 401)
 	}
 }

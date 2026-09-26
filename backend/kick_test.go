@@ -52,7 +52,7 @@ func TestAPIKickRevokesOnlyTargetAndBroadcasts(t *testing.T) {
 	for readRoomEvent(t, guestSocket).Type != "error" {
 	}
 	for _, cookie := range []*http.Cookie{gc, gc2} {
-		request(t, s, "GET", path, nil, cookie, 401)
+		request(t, s, "GET", path+"/session", nil, cookie, 401)
 		request(t, s, "PUT", path+"/progress", map[string]any{"index": 1, "completed": true}, cookie, 401)
 		if _, ok := s.sessions[cookie.Value]; ok {
 			t.Fatal("target session retained")

@@ -134,5 +134,7 @@ PowerShellでは `$env:PLAYWRIGHT_MODULE = (Resolve-Path './tmp/browser-tools/no
 
 APIの詳細は [DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
 
+NodeCGなどの外部表示向けに、参加枠を使わない読み取り専用の観戦APIがあります。ルームIDだけで、誰でもHTTPまたはWebSocketからカード・全員の進捗・勝敗を取得できます。認証は不要です。接続方法は [観戦APIとNodeCG連携](docs/spectator-api.md) を参照してください。
+
 
 GAME_NOTE.mdに基づく改善の詳細と実測待ちの項目は [分布設計](docs/bingo-distribution.md) を参照してください。同じラインから類似・包含課題を除くには、管理画面で同じ「配置禁止グループ」を指定します。

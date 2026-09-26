@@ -179,16 +179,23 @@ func TestWebSocketAuthorizationAndOrigins(t *testing.T) {
 	host, cookie := createTestRoom(t, s, "standard")
 	other, otherCookie := createTestRoom(t, s, "standard")
 	base := socketServer(t, s)
+	for _, headers := range []http.Header{
+		{"Origin": {base}},
+		{"Origin": {"https://external.example"}, "Cookie": {cookie.String()}},
+		{"Cookie": {cookie.String()}},
+	} {
+		connection := dialSpectator(t, base, host.Room.ID, headers)
+		event := readRoomEvent(t, connection)
+		if event.Room == nil || event.Room.ID != host.Room.ID || event.PlayerID != "" {
+			t.Fatal("public connection must return room data without session identity")
+		}
+	}
 	for _, test := range []struct {
 		cookie *http.Cookie
 		origin string
 		status int
 	}{
-		{nil, base, 401},
 		{otherCookie, base, 401},
-		{cookie, "https://evil.example", 403},
-		{cookie, "", 403},
-		{cookie, strings.Replace(base, "http:", "https:", 1), 403},
 	} {
 		headers := http.Header{"Origin": []string{test.origin}}
 		if test.cookie != nil {

@@ -72,15 +72,23 @@ func (s *server) websocketOrigin(r *http.Request) bool {
 }
 
 func (s *server) roomEvents(w http.ResponseWriter, r *http.Request) {
+	// Public readers need no session. Only same-origin participant connections
+	// receive personal session identity and session-expiry notifications.
+	if _, err := r.Cookie("bingo_session"); err != nil || !s.websocketOrigin(r) {
+		s.spectatorEvents(w, r)
+		return
+	}
 	_, _, ok := s.authenticate(w, r)
 	if !ok {
 		return
 	}
-	if !s.websocketOrigin(r) {
-		writeError(w, http.StatusForbidden, "送信元が一致しません")
-		return
-	}
+	cookie, _ := r.Cookie("bingo_session")
+	s.streamRoom(w, r, s.websocketOrigin, func(connection *websocket.Conn) bool {
+		return s.sendRoomSnapshot(connection, cookie.Value, r.PathValue("id"))
+	})
+}
 
+func (s *server) streamRoom(w http.ResponseWriter, r *http.Request, checkOrigin func(*http.Request) bool, sendSnapshot func(*websocket.Conn) bool) {
 	roomID := r.PathValue("id")
 	updates, ok := s.subscribeRoom(roomID)
 	if !ok {
@@ -91,7 +99,7 @@ func (s *server) roomEvents(w http.ResponseWriter, r *http.Request) {
 
 	upgrader := websocket.Upgrader{
 		HandshakeTimeout: socketWriteTimeout,
-		CheckOrigin:      s.websocketOrigin,
+		CheckOrigin:      checkOrigin,
 	}
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -107,14 +115,13 @@ func (s *server) roomEvents(w http.ResponseWriter, r *http.Request) {
 	disconnected := make(chan struct{})
 	go readRoomSocket(connection, disconnected)
 
-	cookie, _ := r.Cookie("bingo_session")
 	ticker := time.NewTicker(roomSyncInterval)
 	defer ticker.Stop()
 	ping := time.NewTicker(socketPingInterval)
 	defer ping.Stop()
 
 	for {
-		if !s.sendRoomSnapshot(connection, cookie.Value, roomID) {
+		if !sendSnapshot(connection) {
 			return
 		}
 		select {

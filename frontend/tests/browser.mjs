@@ -546,12 +546,12 @@ test(
     }
 
     const failedPoll = host.waitForEvent('requestfailed', isStatusRequest);
-    await host.route('**/api/rooms/*', (route) =>
+    await host.route('**/api/rooms/*/session', (route) =>
       route.request().method() === 'GET' ? route.abort() : route.continue(),
     );
     await failedPoll;
     assert.doesNotMatch(await host.locator('#game').innerText(), /WebSocket|同期中|再接続中/);
-    await host.unroute('**/api/rooms/*');
+    await host.unroute('**/api/rooms/*/session');
     const reconnected = once(frames, 'room');
     blockSockets = false;
     await reconnected;

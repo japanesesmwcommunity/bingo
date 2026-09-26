@@ -107,7 +107,7 @@ func TestAdminAuthenticationAndSessionIsolation(t *testing.T) {
 	if cookie.Path != "/api/admin" || !cookie.HttpOnly || cookie.MaxAge != int(adminSessionLifetime.Seconds()) {
 		t.Fatal(cookie)
 	}
-	request(t, s, "GET", "/api/rooms/"+host.Room.ID, nil, cookie, 401)
+	request(t, s, "GET", "/api/rooms/"+host.Room.ID+"/session", nil, cookie, 401)
 	w := request(t, s, "GET", "/api/admin/session", nil, cookie, 200)
 	if strings.Contains(w.Body.String(), "secret") || strings.Contains(w.Body.String(), "token") || !strings.Contains(w.Body.String(), "admin-user") {
 		t.Fatal(w.Body.String())
