@@ -2,8 +2,8 @@
 :root {
   color-scheme: dark;
   --bg: #202020;
-  --panel: #192427;
-  --line: #334345;
+  --panel: #292929;
+  --line: #484848;
   --text: #edf4ed;
   --muted: #a6b8b7;
   --accent: #c9ed85;
@@ -160,7 +160,7 @@ p {
 .room-link {
   padding: 12px 18px;
   color: var(--text);
-  background: #263b37;
+  background: #333333;
   border: 1px solid #66756d;
   border-radius: 8px;
   text-decoration: none;
@@ -169,7 +169,7 @@ p {
 }
 
 .room-link:hover {
-  background: #37594b;
+  background: #444444;
 }
 
 .room-form-page {
@@ -376,7 +376,7 @@ input[type='color'] {
 
 button {
   border: 1px solid #66756d;
-  background: #263b37;
+  background: #333333;
   color: var(--text);
   border-radius: 8px;
   padding: 12px 18px;
@@ -385,7 +385,7 @@ button {
 }
 
 button:hover:enabled {
-  background: #37594b;
+  background: #444444;
 }
 
 button:disabled {
@@ -399,13 +399,13 @@ button:disabled {
 }
 
 .primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #1b2914;
+  background: #dddddd;
+  border-color: #dddddd;
+  color: #202020;
 }
 
 .primary:hover:enabled {
-  background: #e0ffa5;
+  background: #eeeeee;
 }
 
 form > button {
@@ -546,7 +546,7 @@ summary {
 }
 
 #bowser[aria-pressed='true'] {
-  background: #45652e;
+  background: #484848;
   border-color: var(--accent);
 }
 
@@ -588,7 +588,7 @@ summary {
 
 #winner {
   margin-top: 22px;
-  background: #294d35;
+  background: var(--panel);
   border-color: var(--accent);
 }
 
