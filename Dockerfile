@@ -35,7 +35,6 @@ WORKDIR /app
 COPY --from=builder /app/backend/server .
 COPY --from=builder --chown=nonroot:nonroot /app/backend/bingo.json /app/data/bingo.json
 ENV BINGO_DATA=/app/data/bingo.json
-VOLUME ["/app/data"]
 EXPOSE 8080
 USER nonroot:nonroot
 CMD ["./server"]
