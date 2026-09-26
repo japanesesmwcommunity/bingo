@@ -30,6 +30,38 @@ async function newPlayer(t, mobile = false) {
   t.after(() => assert.deepEqual(errors, []));
   return page;
 }
+
+test('player card popup stays synchronized and survives reload', async (t) => {
+  const page = await newPlayer(t);
+  await create(page);
+  const opened = page.waitForEvent('popup');
+  await page.locator('#open-card').click();
+  const popup = await opened;
+  await popup.locator('.cell').first().waitFor();
+  assert.equal(await popup.locator('.cell').count(), 25);
+  assert.equal(await popup.locator('header, footer, #players, #finish').count(), 0);
+  await popup.locator('[data-cell="0"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-cell="0"]')?.getAttribute('aria-pressed') === 'true',
+  );
+  await page.locator('[data-cell="1"]').click();
+  await popup.waitForFunction(
+    () => document.querySelector('[data-cell="1"]')?.getAttribute('aria-pressed') === 'true',
+  );
+  await popup.reload();
+  await popup.waitForFunction(
+    () => document.querySelector('[data-cell="0"]')?.getAttribute('aria-pressed') === 'true',
+  );
+  assert.equal(new URL(popup.url()).searchParams.get('view'), 'card');
+  await popup.setViewportSize({ width: 390, height: 500 });
+  assert.equal(
+    await popup.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    true,
+  );
+  await page.locator('#withdraw').click();
+  await popup.locator('#board').waitFor({ state: 'detached' });
+  assert.equal(await popup.locator('[role=status]').count(), 1);
+});
 async function create(page, mode = 'race', rule = 'standard', participate = true) {
   await page.goto(base);
   assert.equal(await page.locator('#create-form').isVisible(), false);

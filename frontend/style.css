@@ -539,6 +539,22 @@ summary {
   margin-block: auto;
 }
 
+main.card-popup {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card-popup .board {
+  width: 100vmin;
+  min-width: 0;
+}
+
+.card-popup .cell {
+  font-size: clamp(10px, 2.3vmin, 20px);
+  padding: clamp(2px, 1vmin, 8px);
+}
+
 /* Player list */
 .player {
   padding: 16px 0;

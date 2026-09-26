@@ -9,6 +9,7 @@ import {
 } from './model';
 import { RoomConnection } from './room-sync';
 import { SYNC_INTERVAL_MS } from './sync-config';
+import { openCardPopup } from './card-popup';
 import type { LobbyView, Room, RoomSnapshot } from './types';
 
 export function useRoom() {
@@ -203,6 +204,14 @@ export function useRoom() {
     }
   }
 
+  function openCard() {
+    const current = active.current.snapshot;
+    if (!current?.room.players.some((player) => player.id === current.playerId)) return;
+    if (!openCardPopup(current.room.id)) {
+      setNotice('ポップアップがブロックされました。このサイトのポップアップを許可してください。');
+    }
+  }
+
   return {
     snapshot,
     pending,
@@ -216,6 +225,7 @@ export function useRoom() {
     leave,
     deleteRoom,
     copyInvite,
+    openCard,
     finish: () => update('finish', 'POST', {}),
     withdraw: () => update('leave', 'POST', {}),
     kick: (playerId: string) =>

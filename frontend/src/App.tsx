@@ -2,9 +2,11 @@ import logo from '../logo.png';
 import { GameRoom } from './components/GameRoom';
 import { Lobby } from './components/Lobby';
 import { useRoom } from './use-room';
+import { PlayerCard } from './components/PlayerCard';
 
-export function App() {
+export function App({ cardOnly = false }: { cardOnly?: boolean }) {
   const controller = useRoom();
+  if (cardOnly) return <PlayerCard controller={controller} />;
   return (
     <>
       <header>

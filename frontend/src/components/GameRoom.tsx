@@ -31,6 +31,11 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
         </div>
       </div>
       <div className="toolbar">
+        {mine && (
+          <button id="open-card" type="button" onClick={controller.openCard}>
+            カードを別ウィンドウで開く
+          </button>
+        )}
         <button id="invite" type="button" onClick={controller.copyInvite}>
           {controller.inviteCopied ? 'コピーしました' : '招待URLをコピー'}
         </button>
