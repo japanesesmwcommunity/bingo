@@ -10,7 +10,7 @@ import (
 func TestActiveRoomDirectory(t *testing.T) {
 	rm, game, host := newGame(t, Race, bingo.LineOnly)
 	roomID := game.GetRoomStatus().ID
-	want := []Summary{{ID: roomID, Name: "test", Mode: Race, Rule: bingo.LineOnly, PlayerCount: 1, MaxPlayers: 4, Status: "waiting"}}
+	want := []Summary{{ID: roomID, Name: "test", Mode: Race, Rule: bingo.LineOnly, PlayerCount: 1, MaxPlayers: 4, Status: "playing"}}
 	if got := rm.ListActiveRooms(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("initial directory: %+v", got)
 	}
@@ -21,9 +21,6 @@ func TestActiveRoomDirectory(t *testing.T) {
 	}
 	if got := rm.ListActiveRooms(); len(got) != 1 || got[0].PlayerCount != 4 {
 		t.Fatal("full rooms remain in the directory", got)
-	}
-	if err := game.Start(host); err != nil {
-		t.Fatal(err)
 	}
 	if got := rm.ListActiveRooms(); len(got) != 1 || got[0].Status != "playing" {
 		t.Fatal(got)
@@ -46,9 +43,6 @@ func TestActiveRoomDirectory(t *testing.T) {
 
 func TestDirectoryOrderAndConcurrentChanges(t *testing.T) {
 	rm, playing, host := newGame(t, Race, bingo.Standard)
-	if err := playing.Start(host); err != nil {
-		t.Fatal(err)
-	}
 	for _, name := range []string{"B", "A", "A"} {
 		if _, _, err := rm.CreateRoom(CreateOptions{Name: name, Passphrase: "secret"}); err != nil {
 			t.Fatal(err)

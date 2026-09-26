@@ -1,4 +1,3 @@
-import { formatTime } from '../model';
 import { MODE_LABELS } from '../mode-config';
 import type { RoomSnapshot } from '../types';
 import type { RoomController } from '../use-room';
@@ -15,7 +14,10 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
   const mine = room.players.find((player) => player.id === playerId);
   const winner = room.players.find((player) => player.id === room.winnerId);
   const owner = room.ownerId === playerId;
-  const playing = Boolean(room.startedAt) && !room.finishedAt;
+  const playing = !room.finishedAt;
+  const hasProgress = room.players.some(
+    (player) => player.bowserDefeated || player.progress.some(Boolean),
+  );
 
   return (
     <section id="game">
@@ -28,25 +30,12 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
           {owner && <p className="muted">管理者{mine ? '・プレイヤーとして参加中' : ''}</p>}
         </div>
         <div className="clock">
-          <span id="phase">
-            {room.finishedAt ? '終了' : playing ? 'レース中' : '参加者を待っています'}
-          </span>
-          <strong id="timer">{formatTime(room.elapsedSeconds)}</strong>
+          <span id="phase">{room.finishedAt ? '終了' : 'プレイ中'}</span>
         </div>
       </div>
       <div className="toolbar">
         <button id="invite" type="button" onClick={controller.copyInvite}>
           {controller.inviteCopied ? 'コピーしました' : '招待URLをコピー'}
-        </button>
-        <button
-          id="start"
-          className="primary"
-          type="button"
-          hidden={!owner || Boolean(room.startedAt)}
-          disabled={pending || room.players.length === 0}
-          onClick={controller.start}
-        >
-          レース開始
         </button>
         <button
           id="finish"
@@ -60,7 +49,7 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
         <button
           id="regenerate"
           type="button"
-          hidden={!owner || Boolean(room.startedAt)}
+          hidden={!owner || !playing || hasProgress}
           disabled={pending}
           onClick={controller.regenerate}
         >
@@ -69,7 +58,7 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
         <button
           id="withdraw"
           type="button"
-          hidden={!owner || !mine || Boolean(room.startedAt)}
+          hidden={!owner || !mine || Boolean(room.finishedAt)}
           disabled={pending}
           onClick={controller.withdraw}
         >
@@ -78,7 +67,7 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
         <button
           id="leave"
           type="button"
-          hidden={owner || Boolean(room.startedAt)}
+          hidden={owner || Boolean(room.finishedAt)}
           disabled={pending}
           onClick={controller.leave}
         >
@@ -87,14 +76,14 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
         <button
           id="delete-room"
           type="button"
-          hidden={!owner || playing}
+          hidden={!owner}
           disabled={pending}
           onClick={controller.deleteRoom}
         >
           ルームを削除
         </button>
       </div>
-      {owner && !mine && !room.startedAt && (
+      {owner && !mine && !room.finishedAt && (
         <details id="owner-participation">
           <summary>プレイヤーとして参加</summary>
           <form
@@ -132,7 +121,7 @@ export function GameRoom({ snapshot: { room, playerId }, controller }: GameRoomP
       </p>
       <div id="winner" role="status" hidden={!room.finishedAt}>
         {winner
-          ? `${winner.name} の勝利！ · ${formatTime(room.elapsedSeconds)}`
+          ? `${winner.name} の勝利！`
           : room.finishedAt
             ? 'ホストがゲームを終了しました（勝者なし）'
             : ''}

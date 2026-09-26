@@ -17,7 +17,7 @@ import (
 var (
 	ErrNotFound  = errors.New("ルームまたはプレイヤーが見つかりません")
 	ErrForbidden = errors.New("合言葉または操作権限を確認してください")
-	ErrConflict  = errors.New("現在の試合状態では操作できません（開始前・終了後・占有済みなど）")
+	ErrConflict  = errors.New("現在の試合状態では操作できません（終了後・占有済みなど）")
 	ErrFull      = errors.New("満員です。1ルームの定員は4名です")
 )
 
@@ -75,7 +75,7 @@ func (rm *RoomManager) ListActiveRooms() []Summary {
 		r.mu.RLock()
 		if !r.deleted && r.finishedAt.IsZero() {
 			status := "waiting"
-			if !r.startedAt.IsZero() {
+			if len(r.players) > 0 {
 				status = "playing"
 			}
 			rooms = append(rooms, Summary{
@@ -109,9 +109,6 @@ func (rm *RoomManager) DeleteRoom(id, playerID string) error {
 	defer r.mu.Unlock()
 	if r.ownerID != playerID {
 		return ErrForbidden
-	}
-	if !r.startedAt.IsZero() && r.finishedAt.IsZero() {
-		return ErrConflict
 	}
 	r.deleted = true
 	r.version++
@@ -154,7 +151,7 @@ func (r *Room) JoinOwner(ownerID, name, color string) error {
 
 // addPlayer requires the room write lock.
 func (r *Room) addPlayer(id, name, color string) error {
-	if !r.startedAt.IsZero() {
+	if !r.finishedAt.IsZero() {
 		return ErrConflict
 	}
 	if len(r.players) >= MaxPlayers {
@@ -196,7 +193,7 @@ func (r *Room) DeletePlayer(id string) error {
 	if r.deleted || r.players[id] == nil {
 		return ErrNotFound
 	}
-	if !r.startedAt.IsZero() {
+	if !r.finishedAt.IsZero() {
 		return ErrConflict
 	}
 	delete(r.players, id)
@@ -242,16 +239,9 @@ func (r *Room) GetRoomStatus() Status {
 		s.Players = append(s.Players, p.status())
 	}
 	sort.Slice(s.Players, func(i, j int) bool { return s.Players[i].ID < s.Players[j].ID })
-	if !r.startedAt.IsZero() {
-		start := r.startedAt
-		s.StartedAt = &start
-		end := time.Now()
-		if !r.finishedAt.IsZero() {
-			end = r.finishedAt
-			finished := r.finishedAt
-			s.FinishedAt = &finished
-		}
-		s.ElapsedSeconds = int(end.Sub(start).Seconds())
+	if !r.finishedAt.IsZero() {
+		finished := r.finishedAt
+		s.FinishedAt = &finished
 	}
 	return s
 }
@@ -262,8 +252,18 @@ func (r *Room) GenerateCard(seed string, maxTime, minTarget int, rule bingo.Rule
 	if r.deleted {
 		return ErrNotFound
 	}
-	if !r.startedAt.IsZero() {
+	if !r.finishedAt.IsZero() {
 		return ErrConflict
+	}
+	for _, p := range r.players {
+		if p.bowserDefeated {
+			return ErrConflict
+		}
+		for _, completed := range p.progress {
+			if completed {
+				return ErrConflict
+			}
+		}
 	}
 	o := r.options
 	o.MaxTime = maxTime
@@ -283,23 +283,6 @@ func (r *Room) GenerateCard(seed string, maxTime, minTarget int, rule bingo.Rule
 	return nil
 }
 
-func (r *Room) Start(playerID string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.deleted {
-		return ErrNotFound
-	}
-	if playerID != r.ownerID {
-		return ErrForbidden
-	}
-	if !r.startedAt.IsZero() || len(r.players) == 0 {
-		return ErrConflict
-	}
-	r.startedAt = time.Now()
-	r.version++
-	return nil
-}
-
 func (r *Room) Finish(playerID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -309,7 +292,7 @@ func (r *Room) Finish(playerID string) error {
 	if playerID != r.ownerID {
 		return ErrForbidden
 	}
-	if r.startedAt.IsZero() || !r.finishedAt.IsZero() {
+	if !r.finishedAt.IsZero() {
 		return ErrConflict
 	}
 	r.finishedAt = time.Now()
@@ -359,7 +342,7 @@ func (r *Room) canPlay(id string) error {
 	if r.deleted || r.players[id] == nil {
 		return ErrNotFound
 	}
-	if r.startedAt.IsZero() || !r.finishedAt.IsZero() {
+	if !r.finishedAt.IsZero() {
 		return ErrConflict
 	}
 	return nil

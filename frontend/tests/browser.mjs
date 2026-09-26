@@ -117,7 +117,8 @@ test(
     const invite = await create(host, 'race', 'standard', false);
     const id = new URL(invite).hash.slice('#room='.length);
     assert.equal(await host.locator('#player-count').textContent(), '0 / 4');
-    assert.equal(await host.locator('#start').isDisabled(), true);
+    assert.equal(await host.locator('#start').count(), 0);
+    assert.equal(await host.locator('#timer').count(), 0);
     await host.locator('#owner-participation summary').click();
     await host.locator('#owner-join-form [name=playerName]').fill('管理者も参加');
     await host.locator('#owner-join-form button[type=submit]').click();
@@ -136,8 +137,7 @@ test(
     await viewer.goto(base);
     const row = viewer.locator(`[data-room-id="${id}"]`);
     await row.waitFor();
-    assert.equal(await host.locator('#finish').isVisible(), false);
-    await host.locator('#start').click();
+    assert.equal(await host.locator('#finish').isVisible(), true);
     await host.locator('#finish').waitFor({ state: 'visible' });
     await guest.locator('[data-cell="0"]:enabled').click();
     await claimed(guest, 0, true);
@@ -174,7 +174,7 @@ test(
         '',
       );
     }
-    assert.equal(await host.locator('#phase').textContent(), 'レース中');
+    assert.equal(await host.locator('#phase').textContent(), 'プレイ中');
 
     // A failed finish request must leave the game playable and allow retrying.
     await host.route('**/finish', (route) =>
@@ -186,7 +186,7 @@ test(
     );
     await host.locator('#finish').click();
     await host.locator('#notice').waitFor({ state: 'visible' });
-    assert.equal(await host.locator('#phase').textContent(), 'レース中');
+    assert.equal(await host.locator('#phase').textContent(), 'プレイ中');
     await host.unroute('**/finish');
     await host.locator('#finish:enabled').click();
     for (const page of [host, remaining]) {
@@ -202,10 +202,9 @@ test(
     }
     await claimed(remaining, 1, true);
     await row.waitFor({ state: 'hidden' });
-    const timer = await remaining.locator('#timer').textContent();
     await remaining.reload();
     await remaining.locator('#winner').waitFor({ state: 'visible' });
-    assert.equal(await remaining.locator('#timer').textContent(), timer);
+    assert.equal(await remaining.locator('#timer').count(), 0);
     await claimed(remaining, 1, true);
     await mkdir('tmp/browser-results', { recursive: true });
     await host.screenshot({ path: 'tmp/browser-results/manual-finish.png', fullPage: true });
@@ -281,10 +280,8 @@ test(
       fullPage: true,
     });
 
-    await host.locator('#start').click();
     await viewer.waitForFunction(
-      (id) =>
-        document.querySelector(`[data-room-id="${id}"] .room-phase`)?.textContent === '対戦中',
+      (id) => document.querySelector(`[data-room-id="${id}"] .room-phase`)?.textContent === '満員',
       id,
     );
     await row.locator('a').click();
@@ -359,10 +356,8 @@ test(
     );
     assert.equal(await host.evaluate(() => navigator.clipboard.readText()), invite);
     assert.equal(await host.locator('#invite').textContent(), 'コピーしました');
-    await host.locator('#start').click();
     await host.locator('[data-cell="0"]:enabled').waitFor();
     await host.locator('[data-cell="0"]').focus();
-    await host.waitForFunction(() => document.querySelector('#timer').textContent !== '00:00');
     assert.equal(
       await host.locator('[data-cell="0"]').evaluate((cell) => document.activeElement === cell),
       true,
@@ -404,7 +399,6 @@ test(
     const host = await newPlayer(t);
     const invite = await create(host);
     assert.equal(await host.locator('#create-form [name=passphrase]').inputValue(), '');
-    await host.locator('#start').click();
     await host.locator('[data-cell="0"]:enabled').waitFor();
     await host.route('**/progress', (route) =>
       route.fulfill({
@@ -473,7 +467,6 @@ test(
     await guest.locator('#leave').click();
     await guest.locator('#lobby').waitFor({ state: 'visible' });
     await join(guest, invite, 'モバイル');
-    await host.locator('#start').click();
     await host.locator('[data-cell="0"]:enabled').waitFor();
     await host.locator('[data-cell="0"]').click();
     await claimed(host, 0, true);
@@ -525,7 +518,6 @@ test(
     });
     await new Promise((resolve) => setTimeout(resolve, 2200));
     assert.equal(polls.length, 0, 'a healthy websocket must not poll HTTP');
-    await host.locator('#start').click();
     await host.locator('#bowser:enabled').waitFor();
     await host.locator('#bowser').click();
     await host.waitForFunction(

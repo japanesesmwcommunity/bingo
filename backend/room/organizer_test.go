@@ -22,9 +22,6 @@ func TestOrganizerDoesNotOccupyPlayerSlot(t *testing.T) {
 	if _, err := r.GetPlayer(owner); !errors.Is(err, ErrNotFound) {
 		t.Fatal(err)
 	}
-	if err := r.Start(owner); !errors.Is(err, ErrConflict) {
-		t.Fatal("empty game started", err)
-	}
 	var player string
 	for i := 0; i < MaxPlayers; i++ {
 		var err error
@@ -42,13 +39,7 @@ func TestOrganizerDoesNotOccupyPlayerSlot(t *testing.T) {
 	if len(r.GetRoomStatus().Players) != 4 {
 		t.Fatal("capacity")
 	}
-	if err := r.Start(player); !errors.Is(err, ErrForbidden) {
-		t.Fatal(err)
-	}
-	if err := r.Start(owner); err != nil {
-		t.Fatal(err)
-	}
-	if err := r.JoinOwner(owner, "organizer", ""); !errors.Is(err, ErrConflict) {
+	if err := r.JoinOwner(owner, "organizer", ""); !errors.Is(err, ErrFull) {
 		t.Fatal(err)
 	}
 	if err := r.UpdatePlayerProgress(owner, 0, true); !errors.Is(err, ErrForbidden) {
@@ -112,9 +103,6 @@ func TestOrganizerEnrollmentIsExplicitAndReversible(t *testing.T) {
 		t.Fatal("withdraw left player behind")
 	}
 	if err := r.JoinOwner(owner, "organizer", ""); err != nil {
-		t.Fatal(err)
-	}
-	if err := r.Start(owner); err != nil {
 		t.Fatal(err)
 	}
 	for i := 0; i < 5; i++ {

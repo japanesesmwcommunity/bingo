@@ -38,7 +38,7 @@ func TestRoomLifecycle(t *testing.T) {
 	if _, err := uuid.Parse(status.ID); err != nil {
 		t.Fatal(err)
 	}
-	if status.StartedAt != nil || status.OwnerID != host || status.ElapsedSeconds != 0 {
+	if status.OwnerID != host {
 		t.Fatal(status)
 	}
 	if got, err := rm.GetRoom(status.ID); err != nil || got != r {
@@ -101,9 +101,6 @@ func TestRoomLifecycle(t *testing.T) {
 	if _, err := r.AddPlayer("secret", "late", ""); !errors.Is(err, ErrNotFound) {
 		t.Fatal(err)
 	}
-	if err := r.Start(host); !errors.Is(err, ErrNotFound) {
-		t.Fatal(err)
-	}
 	if err := r.GenerateCard("", 90, 20, bingo.Standard); !errors.Is(err, ErrNotFound) {
 		t.Fatal(err)
 	}
@@ -150,28 +147,13 @@ func TestStandardVictory(t *testing.T) {
 	for _, bowserFirst := range []bool{false, true} {
 		rm, r, host := newGame(t, Race, bingo.Standard)
 		guest, _ := r.AddPlayer("secret", "guest", "")
-		if err := r.UpdatePlayerProgress(host, 0, true); !errors.Is(err, ErrConflict) {
-			t.Fatal(err)
-		}
-		if err := r.Start(guest); !errors.Is(err, ErrForbidden) {
-			t.Fatal(err)
-		}
-		if err := r.Start(host); err != nil {
-			t.Fatal(err)
-		}
-		if err := r.Start(host); !errors.Is(err, ErrConflict) {
+		if err := r.UpdatePlayerProgress(host, 0, true); err != nil {
 			t.Fatal(err)
 		}
 		if err := r.GenerateCard("", 90, 20, bingo.Standard); !errors.Is(err, ErrConflict) {
 			t.Fatal(err)
 		}
-		if _, err := r.AddPlayer("secret", "late", ""); !errors.Is(err, ErrConflict) {
-			t.Fatal(err)
-		}
-		if err := r.DeletePlayer(guest); !errors.Is(err, ErrConflict) {
-			t.Fatal(err)
-		}
-		if err := rm.DeleteRoom(r.GetRoomStatus().ID, host); !errors.Is(err, ErrConflict) {
+		if _, err := r.AddPlayer("secret", "late", ""); err != nil {
 			t.Fatal(err)
 		}
 		for _, index := range []int{-1, 25} {
@@ -229,9 +211,6 @@ func TestRaceAndLockout(t *testing.T) {
 	for _, mode := range []Mode{Race, Lockout} {
 		_, r, host := newGame(t, mode, bingo.LineOnly)
 		guest, _ := r.AddPlayer("secret", "guest", "")
-		if err := r.Start(host); err != nil {
-			t.Fatal(err)
-		}
 		if err := r.UpdatePlayerProgress(host, 0, true); err != nil {
 			t.Fatal(err)
 		}
@@ -280,7 +259,6 @@ func TestConcurrentJoins(t *testing.T) {
 func TestConcurrentClaimsAndWinner(t *testing.T) {
 	_, r, host := newGame(t, Lockout, bingo.LineOnly)
 	guest, _ := r.AddPlayer("secret", "guest", "")
-	_ = r.Start(host)
 	var wg sync.WaitGroup
 	for _, id := range []string{host, guest} {
 		wg.Add(1)
@@ -298,7 +276,6 @@ func TestConcurrentClaimsAndWinner(t *testing.T) {
 	}
 	_, r, host = newGame(t, Race, bingo.Standard)
 	guest, _ = r.AddPlayer("secret", "guest", "")
-	_ = r.Start(host)
 	for _, id := range []string{host, guest} {
 		for i := 0; i < 5; i++ {
 			_ = r.UpdatePlayerProgress(id, i, true)
@@ -355,13 +332,6 @@ func TestRoomVersions(t *testing.T) {
 	}
 	if r.GetRoomStatus().Version != version+1 {
 		t.Fatal("card version")
-	}
-	version++
-	if err := r.Start(host); err != nil {
-		t.Fatal(err)
-	}
-	if r.GetRoomStatus().Version != version+1 {
-		t.Fatal("start version")
 	}
 	version++
 	if err := r.UpdatePlayerProgress(host, 0, true); err != nil {

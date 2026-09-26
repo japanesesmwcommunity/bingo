@@ -223,7 +223,6 @@ export function useRoom() {
     leave,
     deleteRoom,
     copyInvite,
-    start: () => update('start', 'POST', {}),
     finish: () => update('finish', 'POST', {}),
     withdraw: () => update('leave', 'POST', {}),
     kick: (playerId: string) =>

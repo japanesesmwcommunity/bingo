@@ -37,7 +37,6 @@ type Room struct {
 	players    map[string]*Player
 	mode       Mode
 	options    bingo.Options
-	startedAt  time.Time
 	finishedAt time.Time
 	winnerID   string
 	deleted    bool
@@ -55,9 +54,7 @@ type Status struct {
 	Players          []PlayerStatus  `json:"players"`
 	Mode             Mode            `json:"mode"`
 	Options          bingo.Options   `json:"options"`
-	StartedAt        *time.Time      `json:"startedAt"`
 	FinishedAt       *time.Time      `json:"finishedAt"`
-	ElapsedSeconds   int             `json:"elapsedSeconds"`
 	WinnerID         string          `json:"winnerId"`
 	EstimatedMinutes float64         `json:"estimatedMinutes"`
 }

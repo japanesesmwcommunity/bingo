@@ -55,9 +55,7 @@ export interface Room {
   };
   players: Player[];
   options: { maxTime: number; minTarget: number; baseRoute: number; rule: Rule };
-  startedAt: string | null;
   finishedAt: string | null;
-  elapsedSeconds: number;
   estimatedMinutes: number;
   winnerId: string;
 }

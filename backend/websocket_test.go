@@ -82,12 +82,8 @@ func TestWebSocketSnapshotsAndUpdates(t *testing.T) {
 	}
 
 	path := "/api/rooms/" + host.Room.ID
-	request(t, s, "POST", path+"/start", nil, hostCookie, 200)
 	game, _ := s.rooms.GetRoom(host.Room.ID)
 	update := awaitRoomVersion(t, guestSocket, game.GetRoomStatus().Version)
-	if update.Room.StartedAt == nil {
-		t.Fatal("start not broadcast")
-	}
 
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, hostCookie, 200)
 	update = awaitRoomVersion(t, guestSocket, game.GetRoomStatus().Version)

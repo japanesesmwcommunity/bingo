@@ -21,7 +21,7 @@ if (!response.ok) throw new Error(`HTTP ${response.status}`);
 const snapshot = await response.json();
 ```
 
-一覧は `{ "rooms": [{ "id": "...", "name": "...", "mode": "race", "rule": "standard", "playerCount": 2, "maxPlayers": 4, "status": "waiting" }] }` を返します。`status` は `waiting` または `playing` で、ルームがなければ `{ "rooms": [] }` です。NodeCGのdashboardではこの一覧から対象のIDを選べます。
+一覧は `{ "rooms": [{ "id": "...", "name": "...", "mode": "race", "rule": "standard", "playerCount": 2, "maxPlayers": 4, "status": "waiting" }] }` を返します。`status` はプレイヤー0人なら `waiting`、1人以上なら `playing` で、ルームがなければ `{ "rooms": [] }` です。NodeCGのdashboardではこの一覧から対象のIDを選べます。
 
 ルーム詳細のHTTP取得とWebSocketの正常時の形式は共通です。`room` は参加者が取得するものと同じ内容で、観戦用の省略形式には分けません。
 
@@ -34,8 +34,8 @@ const snapshot = await response.json();
     options: { rule, maxTime, minTarget, baseRoute }, // rule: "standard" | "line"
     card: { goals: [{ name, world, level, timeMin, exec, risk, tags, ... }, ...], seed, ... },
     players: [{ id, name, color, progress, hasLine, bowserDefeated }, ...],
-    startedAt, finishedAt, // ISO 8601形式、未開始・未終了ならnull
-    elapsedSeconds, estimatedMinutes,
+    finishedAt,           // ISO 8601形式、未終了ならnull
+    estimatedMinutes,
     winnerId              // 勝者なしなら空文字
   }
 }
@@ -43,7 +43,7 @@ const snapshot = await response.json();
 
 `card.goals` は左上から行優先の25件です。各プレイヤーの `progress` は同じ添字の25個の真偽値です。Raceでは同じマスを複数人が達成できます。Lockoutでは1人だけです。参加者の識別には配列位置ではなく `id` を使ってください。名前の表示にはHTML挿入ではなくテキスト描画を使います。
 
-`version` はルームの変更で増加します。経過秒だけの変化では増加しないため、同じversionのスナップショットでもタイマーを更新してください。開始・終了・勝者の判定はAPIの値を使います。初回・再接続時には受信した状態全体で置き換えます。
+`version` はルームの変更で増加します。開始操作やタイマーはありません。終了・勝者の判定はAPIの値を使います。初回・再接続時には受信した状態全体で置き換えます。
 
 存在しないルーム・削除済みルームではHTTP取得とWebSocket接続時に `404` を返します。購読中にルームが削除されると `{ "type": "error", "error": "ルームが削除されました" }` を送り、WebSocketをコード1008で閉じます。接続数は参加用WebSocketと合計で1ルーム32本までで、超過は `429` です。
 

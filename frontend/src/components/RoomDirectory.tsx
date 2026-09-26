@@ -42,11 +42,7 @@ export function RoomDirectory() {
                 <p className="muted">{MODE_LABELS[room.mode]}</p>
               </div>
               <span className={`room-phase ${room.status}`}>
-                {room.status === 'playing'
-                  ? '対戦中'
-                  : room.playerCount >= room.maxPlayers
-                    ? '満員'
-                    : '参加受付中'}
+                {room.playerCount >= room.maxPlayers ? '満員' : '参加受付中'}
               </span>
               <span className="room-capacity">
                 {room.playerCount} / {room.maxPlayers} 人

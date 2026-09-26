@@ -48,7 +48,6 @@ func newServer(secure bool) *server {
 	mux.HandleFunc("GET /api/rooms/{id}/events", s.roomEvents)
 	mux.HandleFunc("GET /api/rooms/{id}/players/{player}", s.playerStatus)
 	mux.HandleFunc("DELETE /api/rooms/{id}/players/{player}", s.kickPlayer)
-	mux.HandleFunc("POST /api/rooms/{id}/start", s.startRoom)
 	mux.HandleFunc("POST /api/rooms/{id}/finish", s.finishRoom)
 	mux.HandleFunc("POST /api/rooms/{id}/card", s.regenerateCard)
 	mux.HandleFunc("PUT /api/rooms/{id}/progress", s.progress)
@@ -299,18 +298,6 @@ func (s *server) kickPlayer(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, game.GetRoomStatus())
 }
 
-func (s *server) startRoom(w http.ResponseWriter, r *http.Request) {
-	game, id, ok := s.authenticate(w, r)
-	if !ok {
-		return
-	}
-	if err := game.Start(id); err != nil {
-		domainError(w, err)
-		return
-	}
-	s.notifyRoom(r.PathValue("id"))
-	writeJSON(w, 200, game.GetRoomStatus())
-}
 func (s *server) finishRoom(w http.ResponseWriter, r *http.Request) {
 	game, id, ok := s.authenticate(w, r)
 	if !ok {

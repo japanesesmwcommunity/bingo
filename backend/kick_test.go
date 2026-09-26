@@ -20,7 +20,6 @@ func TestAPIKickRevokesOnlyTargetAndBroadcasts(t *testing.T) {
 	request(t, s, "DELETE", kickPath, nil, oc, 401)
 	request(t, s, "DELETE", path+"/players/"+host.PlayerID, nil, hc, 403)
 	request(t, s, "DELETE", path+"/players/"+other.PlayerID, nil, hc, 404)
-	request(t, s, "POST", path+"/start", nil, hc, 200)
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, gc, 200)
 	base := socketServer(t, s)
 	hostSocket := dialRoom(t, base, host.Room.ID, hc)

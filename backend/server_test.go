@@ -92,16 +92,11 @@ func TestAPIEntireGame(t *testing.T) {
 	request(t, s, "GET", path, nil, hc, 200)
 	request(t, s, "GET", path+"/players/"+guest.PlayerID, nil, hc, 200)
 	request(t, s, "GET", path+"/players/missing", nil, hc, 404)
-	request(t, s, "POST", path+"/start", nil, gc, 403)
 	request(t, s, "POST", path+"/card", map[string]string{"seed": "preview"}, gc, 403)
 	request(t, s, "POST", path+"/card", map[string]string{"seed": "preview"}, hc, 200)
-	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, hc, 409)
-	request(t, s, "POST", path+"/start", nil, hc, 200)
-	request(t, s, "POST", path+"/start", nil, hc, 409)
+	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, hc, 200)
 	request(t, s, "POST", path+"/card", map[string]string{"seed": "late"}, hc, 409)
-	request(t, s, "POST", path+"/join", map[string]string{"passphrase": "secret", "playerName": "late"}, nil, 409)
-	request(t, s, "POST", path+"/leave", nil, gc, 409)
-	request(t, s, "DELETE", path, nil, hc, 409)
+	request(t, s, "POST", path+"/join", map[string]string{"passphrase": "secret", "playerName": "late"}, nil, 200)
 	for i := 0; i < 5; i++ {
 		request(t, s, "PUT", path+"/progress", map[string]any{"index": i, "completed": true}, hc, 200)
 	}
@@ -147,7 +142,6 @@ func TestAPIValidationAndIsolation(t *testing.T) {
 	request(t, s, "GET", "/api/rooms/"+other.Room.ID+"/session", nil, hc, 401)
 	request(t, s, "POST", "/api/rooms", map[string]string{"name": "bad"}, nil, 400)
 	request(t, s, "POST", path+"/card", map[string]int{"maxTime": 1}, hc, 400)
-	request(t, s, "POST", path+"/start", nil, hc, 200)
 	for _, payload := range []any{map[string]bool{"completed": true}, map[string]int{"index": 0}, map[string]any{"index": 25, "completed": true}, map[string]any{"index": -1, "completed": true}, map[string]any{"index": 0, "completed": true, "playerId": "someone"}} {
 		request(t, s, "PUT", path+"/progress", payload, hc, 400)
 	}
@@ -273,7 +267,6 @@ func TestConcurrentAPI(t *testing.T) {
 	s := testServer(t)
 	host, cookie := createTestRoom(t, s, "standard")
 	path := "/api/rooms/" + host.Room.ID
-	request(t, s, "POST", path+"/start", nil, cookie, 200)
 	var wg sync.WaitGroup
 	for i := 0; i < 25; i++ {
 		wg.Add(1)
@@ -299,7 +292,7 @@ func TestDecodeErrorsOnAllMutations(t *testing.T) {
 			return 401
 		}())
 	}
-	for _, endpoint := range []struct{ method, suffix string }{{"POST", "/start"}, {"POST", "/leave"}, {"DELETE", ""}} {
+	for _, endpoint := range []struct{ method, suffix string }{{"POST", "/leave"}, {"DELETE", ""}} {
 		request(t, s, endpoint.method, path+endpoint.suffix, nil, nil, 401)
 	}
 }

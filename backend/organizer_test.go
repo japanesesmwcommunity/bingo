@@ -18,7 +18,6 @@ func TestAPIOrganizerAndFourPlayers(t *testing.T) {
 	}
 	ownerCookie := w.Result().Cookies()[0]
 	path := "/api/rooms/" + created.Room.ID
-	request(t, s, "POST", path+"/start", nil, ownerCookie, 409)
 	request(t, s, "GET", path, nil, ownerCookie, 200)
 	request(t, s, "POST", path+"/card", map[string]string{"seed": "staff"}, ownerCookie, 200)
 	connection := dialRoom(t, socketServer(t, s), created.Room.ID, ownerCookie)
@@ -35,7 +34,6 @@ func TestAPIOrganizerAndFourPlayers(t *testing.T) {
 		t.Fatal("organizer occupied a slot")
 	}
 	request(t, s, "POST", path+"/join", map[string]string{"playerName": "staff"}, ownerCookie, 409)
-	request(t, s, "POST", path+"/start", nil, ownerCookie, 200)
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, ownerCookie, 403)
 	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, ownerCookie, 403)
 	request(t, s, "POST", path+"/finish", nil, ownerCookie, 200)
@@ -74,5 +72,4 @@ func TestAPIOrganizerCanWithdrawWithoutLosingAccess(t *testing.T) {
 	if len(game.GetRoomStatus().Players) != 1 {
 		t.Fatal("duplicate participation")
 	}
-	request(t, s, "POST", path+"/start", nil, cookie, 200)
 }

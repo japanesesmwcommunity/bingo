@@ -12,8 +12,7 @@ func TestAPIFinishAndBroadcast(t *testing.T) {
 	_, gc := joinTestRoom(t, s, host.Room.ID, "guest")
 	path := "/api/rooms/" + host.Room.ID
 	request(t, s, "POST", path+"/finish", nil, nil, 401)
-	request(t, s, "POST", path+"/finish", nil, hc, 409)
-	request(t, s, "POST", path+"/start", nil, hc, 200)
+
 	request(t, s, "POST", path+"/finish", nil, gc, 403)
 	connection := dialRoom(t, socketServer(t, s), host.Room.ID, gc)
 	initial := readRoomEvent(t, connection)
@@ -29,8 +28,9 @@ func TestAPIFinishAndBroadcast(t *testing.T) {
 	if event.Room.FinishedAt == nil || !event.Room.FinishedAt.Equal(*status.FinishedAt) || event.Room.WinnerID != "" {
 		t.Fatal("finish not broadcast", event)
 	}
-	request(t, s, "POST", path+"/finish", nil, hc, 409)
+
 	request(t, s, "PUT", path+"/progress", map[string]any{"index": 0, "completed": true}, gc, 409)
+	request(t, s, "POST", path+"/finish", nil, hc, 409)
 	request(t, s, "PUT", path+"/bowser", map[string]bool{"completed": true}, hc, 409)
 	request(t, s, "DELETE", path, nil, hc, 204)
 }

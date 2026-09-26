@@ -58,9 +58,6 @@ func TestKickReleasesLockoutAndPreservesFinishedResults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := r.Start(owner); err != nil {
-		t.Fatal(err)
-	}
 	if err := r.UpdatePlayerProgress(guest, 0, true); err != nil {
 		t.Fatal(err)
 	}
@@ -100,9 +97,6 @@ func TestKickAndConcurrentProgress(t *testing.T) {
 	_, r, owner := newManagedGame(t, Race, bingo.Standard)
 	guest, err := r.AddPlayer("secret", "guest", "")
 	if err != nil {
-		t.Fatal(err)
-	}
-	if err := r.Start(owner); err != nil {
 		t.Fatal(err)
 	}
 	var wg sync.WaitGroup

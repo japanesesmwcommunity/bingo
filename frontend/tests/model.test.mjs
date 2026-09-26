@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  formatTime,
   roomIdFromHash,
   cellState,
   createPayload,
@@ -27,17 +26,6 @@ test('goal labels combine stage metadata using LEVEL_LIST conventions', () => {
   }
 });
 
-test('elapsed time is stable across minute boundaries', () => {
-  for (const [seconds, expected] of [
-    [0, '00:00'],
-    [59, '00:59'],
-    [60, '01:00'],
-    [3661, '61:01'],
-    [-1, '00:00'],
-    [1.9, '00:01'],
-  ])
-    assert.equal(formatTime(seconds), expected);
-});
 test('invites accept room UUIDs only', () => {
   const id = '12345678-1234-1234-1234-123456789abc';
   assert.equal(roomIdFromHash(`#room=${id}`), id);
@@ -52,12 +40,10 @@ test('the home page lists rooms and forms have separate routes', () => {
   assert.equal(lobbyViewFromHash('#room=12345678-1234-1234-1234-123456789abc'), 'join');
   assert.equal(lobbyViewFromHash('#room=invalid'), 'list');
 });
-test('race, lockout, pregame and ended boards expose the right actions', () => {
+test('participants can mark immediately; lockout and finished rooms restrict actions', () => {
   const a = { id: 'a', progress: Array(25).fill(false) },
     b = { id: 'b', progress: Array(25).fill(false) };
-  const room = { players: [a, b], mode: 'race', startedAt: null, finishedAt: null };
-  assert.equal(cellState(room, 'a', 0).disabled, true);
-  room.startedAt = 'now';
+  const room = { players: [a, b], mode: 'race', finishedAt: null };
   assert.equal(cellState(room, 'a', 0).disabled, false);
   b.progress[0] = true;
   assert.equal(cellState(room, 'a', 0).disabled, false);

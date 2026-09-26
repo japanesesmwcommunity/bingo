@@ -49,7 +49,7 @@ func TestSpectatorPublicReadOnly(t *testing.T) {
 		t.Fatal("unexpected cache or credentials")
 	}
 	for _, action := range []struct{ method, suffix string }{
-		{"GET", "/session"}, {"POST", "/start"}, {"POST", "/finish"}, {"POST", "/card"},
+		{"GET", "/session"}, {"POST", "/finish"}, {"POST", "/card"},
 		{"PUT", "/progress"}, {"PUT", "/bowser"}, {"DELETE", ""},
 	} {
 		response := request(t, s, action.method, path+action.suffix, nil, nil, 401)
@@ -127,7 +127,6 @@ func TestSpectatorStreamUpdatesAndDeletion(t *testing.T) {
 	if event := readSpectatorEvent(t, connection); event.Room.Version != first.Room.Version {
 		t.Fatal("missing periodic snapshot")
 	}
-	request(t, s, "POST", path+"/start", nil, cookie, 200)
 	for i := 0; i < 5; i++ {
 		request(t, s, "PUT", path+"/progress", map[string]any{"index": i, "completed": true}, cookie, 200)
 	}
@@ -153,7 +152,7 @@ func TestSpectatorStreamUpdatesAndDeletion(t *testing.T) {
 
 func TestSpectatorHandshakeAndReadOnly(t *testing.T) {
 	s := testServer(t)
-	host, cookie := createTestRoom(t, s, "line")
+	host, _ := createTestRoom(t, s, "line")
 	id := host.Room.ID
 	base := socketServer(t, s)
 	prefix := "ws" + strings.TrimPrefix(base, "http") + "/api/rooms/"
@@ -164,7 +163,6 @@ func TestSpectatorHandshakeAndReadOnly(t *testing.T) {
 	if err == nil || response == nil || response.StatusCode != 404 {
 		t.Fatal("missing room accepted")
 	}
-	request(t, s, "POST", "/api/rooms/"+id+"/start", nil, cookie, 200)
 	connection := dialSpectator(t, base, id, nil)
 	_ = readSpectatorEvent(t, connection)
 	if err := connection.WriteJSON(map[string]any{"index": 0, "completed": true, "playerId": host.PlayerID}); err != nil {
